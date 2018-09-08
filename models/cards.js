@@ -1,22 +1,25 @@
 var mongoose = require('mongoose');
 
 var cardSchema = new mongoose.Schema({
-  id : Number,        // or uuid
+  // TODO auto generated id
+  id : Number,            // or uuid
   title: String,
   description: String,
   comments: Array,
-  startedAt: Date,    //
-  ttl: Number,        // card countdown time
-  point: Number,      // maximum possible gain point
+  startedDate: Date,
+  dueDate: Date,
+  timeLimit: Number,
+  point: Number,          // maximum possible gain point
 
   // Assignee
-  assignee: Number,   // assignee id
-  staking: Number,    // how much assignee staked
-  reference: String,  // jupyter notebook address
-  gained: Number,     // how much assignee gained
+  assigneeId: Number,       // assignee id
+  staking: Number,        // how much assignee staked
+  submissionUrl: String,  // jupyter notebook address
+  gained: Number,         // how much assignee gained
+  ttl: Number,            // card countdown time
 
   // meta information
-  createdAt: Date,    // card created time
+  createdDate: Date,    // card created time
   createdBy: Number,  // card creator id
   state: String,
 
@@ -29,8 +32,48 @@ cardSchema.methods.shorten = function () {
     title: this.title,
     description: this.description.substr(0, 100),
     state: this.state,
-    assignee: this.assignee
+    assigneeId: this.assignee
   }
+}
+
+cardSchema.methods.detail = function () {
+  // TODO add more fields
+  return {
+    id: this.id,
+    title: this.title,
+    description: this.description,
+    state: this.state,
+    assigneeId: this.assigneeId,
+    point: this.point,
+    submissionUrl: this.submissionUrl
+  }
+}
+
+cardSchema.methods.all = function () {
+  return {
+    id : this.id,
+    title: this.title,
+    description: this.description,
+    comments: this.comments,
+    startedDate: this.startedDate,
+    ttl: this.ttl,
+    point: this.point,
+    assigneeId: this.assigneeId,
+    staking: this.staking,
+    submissionUrl: this.submissionUrl,
+    gained: this.gained,
+    createdDate: this.createdDate,
+    createdBy: this.createdBy,
+    state: this.state,
+  }
+}
+
+cardSchema.methods.clear = function () {
+  this.startedDate = null
+  this.assigneeId = null
+  this.staking = null
+  this.submissionUrl = null
+  this.ttl = -1
 }
 
 var Card = mongoose.model('Card', cardSchema);
@@ -39,5 +82,7 @@ var Card = mongoose.model('Card', cardSchema);
 //     if (err) return console.error(err);
 //     console.log('success to save')
 //   });
+
+// TODO card status
 
 module.exports = Card;

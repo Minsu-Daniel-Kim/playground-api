@@ -4,9 +4,9 @@ var StateMachine = require('javascript-state-machine');
 var Card = require('../models/cards');
 var mongoose = require('mongoose');
 
+
 // if (process.env.NODE_ENV !== 'production')
 require('dotenv').load();
-console.log("process.env: " + process.env.NODE_ENV, ",", process.env.DATABASE_URL)
 
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
@@ -28,27 +28,51 @@ var fsm = new StateMachine({
     { name: 'goto', from: '*', to: function(state) { return state } }
   ],
   methods: {
-    onBeforeReady: function(lifecycle, card, params) {
-      console.log('onBeforeReady', params.point)
-      if (params.point === undefined || params.point < 0)
-        return false
-    },
     onReady: function(lifecycle, card, params) {
-      console.log('onReady')
-      card.point = params.point
-      card.ttl = 1440 // one day
+      console.log('onReady');
+      if (params.point === undefined || params.point < 0)
+        return false;
+
+      card.point = params.point;
+      // TODO set ttl based on point
+      card.timeLimit = 1440;
+      card.ttl = 1440;
     },
-    onAssigned: function() {console.log('onAssigned')},
-    onSubmited: function() {console.log('onSubmited')},
-    onAccepted: function() {console.log('onAccepted')},
-    onRejected: function() {console.log('onRejected')},
-    onGaveup:   function() {console.log('onGaveup')},
-    onTimesup:  function() {console.log('onTimesup')}
+    onAssigned: function(lifecycle, card, params) {
+      console.log('onAssigned');
+      if (params.assigneeId === undefined || params.staking === undefined)
+        return false;
+
+      card.assigneeId = params.assigneeId;
+      card.staking = params.staking;
+      card.startedAt = Date.now()
+      // TODO add history
+      // card.history.add(new History({}))
+    },
+    onSubmited: function(lifecycle, card, params) {
+      console.log('onSubmited')
+      // TODO stop countdown
+      card.ttl = card.dueDate - Date.now()
+    },
+    onAccepted: function(lifecycle, card, params) {
+      console.log('onAccepted')
+      card.gained = params.point
+      // TODO add point to assignee
+    },
+    onRejected: function(lifecycle, card, params) {
+      console.log('onRejected')
+      // TODO start countdown
+    },
+    onGaveup:   function(lifecycle, card, params) {
+      console.log('onGaveup')
+      card.clear()
+    },
+    onTimesup:  function(lifecycle, card, params) {
+      console.log('onTimesup')
+      card.clear()
+    }
   }
 });
-
-
-
 
 /* Router */
 router.get('/', function(req, res, next) {
@@ -58,6 +82,22 @@ router.get('/', function(req, res, next) {
     return res.send(cards);
   })
 });
+
+router.post('/:id/submission', function(req, res, next) {
+  Card.findOne({id: req.params.id}, function (err, card) {
+    if (err) return console.error(err);
+    if (req.body.url === undefined) {
+      res.statusCode = 400;
+      return res.send({message: 'Url is empty'})
+    }
+
+    card.submissionUrl = req.body.url
+    card.save(function (err, saved) {
+      if (err) return res.send(err);
+      return res.send(saved.detail())
+    })
+  });
+})
 
 router.get('/:id', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
@@ -85,15 +125,21 @@ router.post('/:id/state', function(req, res, next) {
 
     card.state = fsm.state
     card.save(function (err, saved) {
-      if (err) return console.error(err);
-      return res.send(saved)
+      if (err) return res.send(err);
+      return res.send(saved.detail())
     })
   });
 })
 
-router.get('/detail/:id', function(req, res, next) {
-  var id = req.query.id;
-  res.send('hello world');
+router.get('/:id/detail', function(req, res, next) {
+  Card.findOne({id: req.params.id}, function (err, card) {
+    if (err) return console.error(err);
+    console.log(req)
+    if (req.query.fields == 'all') {
+      return res.send(card.all())
+    }
+    return res.send(card.detail())
+  });
 });
 
 module.exports = router;
