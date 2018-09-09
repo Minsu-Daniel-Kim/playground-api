@@ -29,17 +29,41 @@ router.get('/test-apis', function(req, res, next) {
           url: "https://snowball-api-backend.herokuapp.com/cards",
         },
         {
-          comment: 'NotStarted',
-          url: "https://snowball-api-backend.herokuapp.com/cards/card_4cI8xJf3",
+          comment: 'BACKLOG',
+          url: [
+          "https://snowball-api-backend.herokuapp.com/cards/card_JZawFDk3",
+          "https://snowball-api-backend.herokuapp.com/cards/card_JZawFDk3/detail"],
         },
         {
-          comment: 'InProgress',
-          url: "https://snowball-api-backend.herokuapp.com/cards/card_OVEGWNHj",
+          comment: 'NOT_STARTED',
+          url: [
+          "https://snowball-api-backend.herokuapp.com/cards/card_4cI8xJf3",
+          "https://snowball-api-backend.herokuapp.com/cards/card_4cI8xJf3/detail",
+          ]
         },
         {
-          comment: 'InReview',
-          url: "https://snowball-api-backend.herokuapp.com/cards/card_xijtCZ9J",
-        }
+          comment: 'IN_PROGRESS',
+          url: [
+          "https://snowball-api-backend.herokuapp.com/cards/card_OVEGWNHj",
+          "https://snowball-api-backend.herokuapp.com/cards/card_OVEGWNHj/detail",
+          ]
+        },
+        {
+          comment: 'IN_REVIEW',
+          url: [
+          "https://snowball-api-backend.herokuapp.com/cards/card_xijtCZ9J",
+          "https://snowball-api-backend.herokuapp.com/cards/card_xijtCZ9J/detail",
+          ]
+        },
+        {
+          comment: 'COMPLETED',
+          url: ["https://snowball-api-backend.herokuapp.com/cards/card_jAl7YVdF",
+          "https://snowball-api-backend.herokuapp.com/cards/card_jAl7YVdF/detail"],
+        },
+
+
+
+
       ]
     },
     {

@@ -10,18 +10,18 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
 
-// Backlog, NotStarted, InProgress, InReview, Complete
+// BACKLOG, NOT_STARTED, IN_PROGRESS, IN_REVIEW, COMPLETE
 var fsm = new StateMachine({
-  init: 'Backlog',
+  init: 'BACKLOG',
   transitions: [
-    { name: 'ready',    from: 'Backlog',    to: 'NotStarted' },
-    { name: 'assigned', from: 'NotStarted', to: 'InProgress' },
-    { name: 'submited', from: 'InProgress', to: 'InReview' },
-    { name: 'accepted', from: 'InReview',   to: 'Complete' },
-    { name: 'rejected', from: 'InReview',   to: 'InProgress' },
-    { name: 'gaveup',   from: 'InReview',   to: 'NotStarted' },
+    { name: 'ready',    from: 'BACKLOG',    to: 'NOT_STARTED' },
+    { name: 'assigned', from: 'NOT_STARTED', to: 'IN_PROGRESS' },
+    { name: 'submited', from: 'IN_PROGRESS', to: 'IN_REVIEW' },
+    { name: 'accepted', from: 'IN_REVIEW',   to: 'COMPLETE' },
+    { name: 'rejected', from: 'IN_REVIEW',   to: 'IN_PROGRESS' },
+    { name: 'gaveup',   from: 'IN_REVIEW',   to: 'NOT_STARTED' },
     // TODO go to where?
-    { name: 'timesup', from: 'InProgress',  to: 'Backlog' },
+    { name: 'timesup', from: 'IN_PROGRESS',  to: 'BACKLOG' },
     { name: 'goto', from: '*', to: function(state) { return state } }
   ],
   methods: {
@@ -111,7 +111,7 @@ router.get('/:id', function(req, res, next) {
 router.post('/:id/state', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    // TODO init card's state as Backlog
+    // TODO init card's state as BACKLOG
     fsm.goto(card.currentState());
     if (fsm.cannot(req.body.action)) {
       return res.send(`Fail to action: ${req.body.action}`)

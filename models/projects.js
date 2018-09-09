@@ -14,7 +14,7 @@ var schema = new mongoose.Schema({
     userId: String,
     joinedDate: Date
   }],
-  state: String,    // editing, ready, in progress, ended
+  state: String,    // editing, OPEN, RUNNING, CLOSED
   private: Boolean  // open <-> private
 });
 
@@ -32,5 +32,21 @@ schema.methods.to_json = function () {
 }
 
 var Project = mongoose.model('Project', schema);
+// new Project({
+//   id: "project_XwPp9xaz",
+//   name: "부트캠프 1기",
+//   desciption: "",
+//   reputation: 100,
+//   createdDate: Date.now() - (24*60*60*1000*4*30),
+//   createdBy: "user_xfdmwXAs",
+//   history: [],
+//   members: [
+//   {
+//     userId: "user_xqm5wXXas",
+//     joinedDate: Date.now(),
+//   }],
+//   state: 'CLOSED',
+//   private: false
+// }).save()
 
 module.exports = Project;
