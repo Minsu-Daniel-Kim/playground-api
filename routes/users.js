@@ -3,11 +3,12 @@ var router = express.Router();
 var User = require('../models/users');
 var mongoose = require('mongoose');
 
-require('dotenv').load();
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
+
+// api for managing
 router.get('/', function(req, res, next) {
   User.find(function (err, users) {
     if (err) return console.error(err);

@@ -5,9 +5,6 @@ var Card = require('../models/cards');
 var mongoose = require('mongoose');
 
 
-// if (process.env.NODE_ENV !== 'production')
-require('dotenv').load();
-
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -75,13 +72,14 @@ var fsm = new StateMachine({
 });
 
 /* Router */
+// For management
 router.get('/', function(req, res, next) {
   Card.find(function (err, cards) {
     if (err) return console.error(err);
-    // TODO convert
     return res.send(cards);
   })
 });
+
 
 router.post('/:id/submission', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
@@ -102,7 +100,10 @@ router.post('/:id/submission', function(req, res, next) {
 router.get('/:id', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    // TODO convert
+    if (card === null) {
+      res.statusCode = 400;
+      return res.send({message: `Can't find card: ${req.params.id}`})
+    }
     return res.send(card.shorten());
   })
 });
@@ -111,16 +112,13 @@ router.post('/:id/state', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
     // TODO init card's state as Backlog
-    if (card.state === undefined)
-      card.state = 'Backlog'
-
-    fsm.goto(card.state);
+    fsm.goto(card.currentState());
     if (fsm.cannot(req.body.action)) {
-      return res.send("Fail to change")
+      return res.send(`Fail to action: ${req.body.action}`)
     }
     // Update card's state
     if (fsm[req.body.action](card, req.body) === false) {
-      return res.send("Fail to change")
+      return res.send(`Fail to action: ${req.body.action}`)
     }
 
     card.state = fsm.state
@@ -141,5 +139,12 @@ router.get('/:id/detail', function(req, res, next) {
     return res.send(card.detail())
   });
 });
+
+
+// TODO Create cards
+// var randomstring = require("randomstring");
+// router.post('/new', function() {
+
+// });
 
 module.exports = router;

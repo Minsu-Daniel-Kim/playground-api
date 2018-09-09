@@ -1,8 +1,7 @@
 var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
-  // TODO auto generated id
-  id: String,
+  id: String, // use uuid
   nickname: String,
   email: String,
   accountAddress: String,
