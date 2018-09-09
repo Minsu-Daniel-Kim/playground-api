@@ -8,6 +8,7 @@ var schema = new mongoose.Schema({
   accountAddress: String,
   createdDate: Date,
   reputation: Number,
+  profileImageUrl: String, // gravata address
   point: Number,
   projects: [{
       projectId: String,
@@ -27,7 +28,8 @@ schema.methods.to_json = function () {
     email: this.email,
     accountAddress: this.accountAddress,
     createdDate: this.createdDate,
-    reputation: this.reputation
+    reputation: this.reputation,
+    profileImageUrl: this.profileImageUrl
   }
 }
 
