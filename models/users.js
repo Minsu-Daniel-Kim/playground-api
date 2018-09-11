@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
-  id: String, // use uuid
+  id: String,
   nickname: String,
   email: String,
   accountAddress: String,
@@ -17,7 +17,6 @@ var schema = new mongoose.Schema({
       stacking: Number
       }
     ]
-  // history
 });
 
 schema.methods.to_json = function () {
@@ -33,10 +32,11 @@ schema.methods.to_json = function () {
 }
 
 var User = mongoose.model('User', schema);
+module.exports = User;
+
 // var user1 = new User({ id: "abcde", nickname: "kitty", email: "rabierre@gmail.com", reputation: 0, point: 0, createdDate: Date.now()});
 // user1.save(function (err, user1) {
 //   if (err) return console.error(err);
 //   console.log('success to save')
 // });
 
-module.exports = User;

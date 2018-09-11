@@ -16,10 +16,10 @@ var fsm = new StateMachine({
   transitions: [
     { name: 'ready',    from: 'BACKLOG',    to: 'NOT_STARTED' },
     { name: 'assigned', from: 'NOT_STARTED', to: 'IN_PROGRESS' },
-    { name: 'submited', from: 'IN_PROGRESS', to: 'IN_REVIEW' },
+    { name: 'submitted', from: 'IN_PROGRESS', to: 'IN_REVIEW' },
     { name: 'accepted', from: 'IN_REVIEW',   to: 'COMPLETE' },
     { name: 'rejected', from: 'IN_REVIEW',   to: 'IN_PROGRESS' },
-    { name: 'gaveup',   from: 'IN_REVIEW',   to: 'NOT_STARTED' },
+    { name: 'gaveup',   from: 'IN_PROGRESS',   to: 'NOT_STARTED' },
     // TODO go to where?
     { name: 'timesup', from: 'IN_PROGRESS',  to: 'BACKLOG' },
     { name: 'goto', from: '*', to: function(state) { return state } }
@@ -31,9 +31,7 @@ var fsm = new StateMachine({
         return false;
 
       card.point = params.point;
-      // TODO set ttl based on point
-      card.timeLimit = 1440;
-      card.ttl = 1440;
+      card.timeLimit = 1440; // TODO set timeLimit based on point
     },
     onAssigned: function(lifecycle, card, params) {
       console.log('onAssigned');
@@ -42,12 +40,14 @@ var fsm = new StateMachine({
 
       card.assigneeId = params.assigneeId;
       card.staking = params.staking;
+      card.ttl = card.timeLimit;
       card.startedAt = Date.now()
+      card.dueDate = Date.now() + card.timeLimit * 1000;
       // TODO add history
-      // card.history.add(new History({}))
+      // card.history.add({})
     },
-    onSubmited: function(lifecycle, card, params) {
-      console.log('onSubmited')
+    onSubmitted: function(lifecycle, card, params) {
+      console.log('onSubmitted')
       // TODO stop countdown
       card.ttl = card.dueDate - Date.now()
     },
@@ -100,25 +100,27 @@ router.post('/:id/submission', function(req, res, next) {
 router.get('/:id', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    if (card === null) {
-      res.statusCode = 400;
-      return res.send({message: `Can't find card: ${req.params.id}`})
-    }
+    if (card === null) return notFound(req, res)
     return res.send(card.shorten());
   })
 });
 
-router.post('/:id/state', function(req, res, next) {
+function notFound(req, res) {
+  res.statusCode = 400;
+  res.send({message: `Can't find card: ${req.params.id}`})
+}
+
+function updateCardState(req, res, action) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    // TODO init card's state as BACKLOG
+    if (card === null) return notFound(req, res)
+
     fsm.goto(card.currentState());
-    if (fsm.cannot(req.body.action)) {
-      return res.send(`Fail to action: ${req.body.action}`)
+    if (fsm.cannot(action)) {
+      return res.send({message: `Fail to assign. card state is: ${card.currentState()}`})
     }
-    // Update card's state
-    if (fsm[req.body.action](card, req.body) === false) {
-      return res.send(`Fail to action: ${req.body.action}`)
+    if (fsm[action](card, req.body) === false) {
+      return res.send({message: `Fail to assign. assigneeId: ${req.body.assigneeId}, staking: ${req.body.staking}`})
     }
 
     card.state = fsm.state
@@ -127,12 +129,23 @@ router.post('/:id/state', function(req, res, next) {
       return res.send(saved.detail())
     })
   });
+}
+
+router.post('/:id/assign', function(req, res, next) {
+  action = 'assigned'
+  return updateCardState(req, res, action)
+})
+
+router.post('/:id/giveup', function(req, res, next) {
+  action = 'gaveup'
+  return updateCardState(req, res, action)
 })
 
 router.get('/:id/detail', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    console.log(req)
+    if (card === null) return notFound(req, res)
+
     if (req.query.fields == 'all') {
       return res.send(card.all())
     }

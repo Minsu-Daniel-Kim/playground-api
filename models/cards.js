@@ -66,7 +66,21 @@ cardSchema.methods.detail = function () {
     state: this.state,
     assigneeId: this.assigneeId,
     point: this.point,
-    submissionUrl: this.submissionUrl
+    submissionUrl: this.submissionUrl,
+    comments: this.comments.map(comment => convert(comment))
+  }
+}
+
+function convert(comment) {
+  return {
+    id: comment.id,
+    parentId: comment.parentId,
+    title: comment.title,
+    description: comment.description,
+    userId: comment.userId,
+    createdDate: comment.createdDate,
+    approved: comment.approved,
+    approver: comment.approver
   }
 }
 
