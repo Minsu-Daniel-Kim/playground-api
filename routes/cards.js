@@ -239,12 +239,4 @@ router.post('/:id/comment', function(req, res, next) {
   });
 })
 
-
-
-
-// TODO Create cards
-// var randomstring = require("randomstring");
-// router.post('/new', function() {
-// });
-
 module.exports = router;
