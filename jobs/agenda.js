@@ -4,8 +4,7 @@ const Agenda = require('agenda');
 // let agenda = new Agenda({db: {address: dbendpoint, collection: 'jobs'}});
 // const agenda = new Agenda({defaultLockLifetime: 10000});
 
-// DATABASE_URL='mongodb://localhost:27017/Snowball'
-const agenda = new Agenda({db: {address: 'localhost:27017/agenda-test', collection: 'agendaJobs'}});
+const agenda = new Agenda({db: {address: process.env.DATABASE_URL, collection: 'agendaJobs'}});
 
 // let jobTypes = process.env.JOB_TYPES ? process.env.JOB_TYPES.split(',') : [];
 // jobTypes.forEach(function(type) {
