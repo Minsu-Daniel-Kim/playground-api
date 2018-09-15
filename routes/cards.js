@@ -35,10 +35,10 @@ var fsm = new StateMachine({
     },
     onAssigned: function(lifecycle, card, params) {
       console.log('onAssigned');
-      if (params.assigneeId === undefined || params.staking === undefined)
+      if (params.userId === undefined || params.staking === undefined)
         return false;
 
-      card.assigneeId = params.assigneeId;
+      card.assigneeId = params.userId;
       card.staking = params.staking;
       card.ttl = card.timeLimit;
       card.startedAt = Date.now()
@@ -84,7 +84,7 @@ router.get('/', function(req, res, next) {
 router.post('/:id/submission', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
-    if (req.body.url === undefined) {
+    if (req.body.url === '') {
       res.statusCode = 400;
       return res.send({message: 'Url is empty'})
     }
@@ -120,7 +120,7 @@ function updateCardState(req, res, action) {
       return res.send({message: `Fail to assign. card state is: ${card.currentState()}`})
     }
     if (fsm[action](card, req.body) === false) {
-      return res.send({message: `Fail to assign. assigneeId: ${req.body.assigneeId}, staking: ${req.body.staking}`})
+      return res.send({message: `Fail to assign. userId: ${req.body.userId}, staking: ${req.body.staking}`})
     }
 
     card.state = fsm.state
