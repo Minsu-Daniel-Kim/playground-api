@@ -105,42 +105,6 @@ router.get('/:id', function(req, res, next) {
   })
 });
 
-function notFound(req, res) {
-  res.statusCode = 400;
-  res.send({message: `Can't find card: ${req.params.id}`})
-}
-
-function updateCardState(req, res, action) {
-  Card.findOne({id: req.params.id}, function (err, card) {
-    if (err) return console.error(err);
-    if (card === null) return notFound(req, res)
-
-    fsm.goto(card.currentState());
-    if (fsm.cannot(action)) {
-      return res.send({message: `Fail to assign. card state is: ${card.currentState()}`})
-    }
-    if (fsm[action](card, req.body) === false) {
-      return res.send({message: `Fail to assign. userId: ${req.body.userId}, staking: ${req.body.staking}`})
-    }
-
-    card.state = fsm.state
-    card.save(function (err, saved) {
-      if (err) return res.send(err);
-      return res.send(saved.detail())
-    })
-  });
-}
-
-router.post('/:id/assign', function(req, res, next) {
-  action = 'assigned'
-  return updateCardState(req, res, action)
-})
-
-router.post('/:id/giveup', function(req, res, next) {
-  action = 'gaveup'
-  return updateCardState(req, res, action)
-})
-
 router.get('/:id/detail', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
@@ -153,11 +117,67 @@ router.get('/:id/detail', function(req, res, next) {
   });
 });
 
+function notFound(req, res) {
+  res.statusCode = 400;
+  res.send({message: `Can't find card: ${req.params.id}`})
+}
+
+function updateCardState(req, res, action) {
+  Card.findOne({id: req.params.id}, function (err, card) {
+    if (err) return console.error(err);
+    if (card === null) return notFound(req, res)
+
+    fsm.goto(card.currentState());
+    if (fsm.cannot(action)) {
+      return res.send({message: `Fail to ${action}. card state is: ${card.currentState()}`})
+    }
+    if (fsm[action](card, req.body) === false) {
+      return res.send({message: `Fail to ${action}. userId: ${req.body.userId}, staking: ${req.body.staking}`})
+    }
+
+    card.state = fsm.state
+    card.save(function (err, saved) {
+      if (err) return res.send(err);
+      return res.send(saved.detail())
+    })
+  });
+}
+
+router.post('/:id/assign', function(req, res, next) {
+  action = 'assigned'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+router.post('/:id/giveup', function(req, res, next) {
+  action = 'gaveup'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+router.post('/:id/submit', function(req, res, next) {
+  action = 'submitted'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+router.post('/:id/accept', function(req, res, next) {
+  action = 'accepted'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+router.post('/:id/reject', function(req, res, next) {
+  action = 'rejected'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+
 
 // TODO Create cards
 // var randomstring = require("randomstring");
 // router.post('/new', function() {
-
 // });
 
 module.exports = router;
