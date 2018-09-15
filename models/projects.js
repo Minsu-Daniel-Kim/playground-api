@@ -26,8 +26,15 @@ schema.methods.to_json = function () {
     reputation: this.reputation,
     createdDate: this.createdDate,
     createdBy: this.createdBy,
-    members: this.members,
     state: this.state,
+    members: this.members.map(member => convert(member)),
+  }
+}
+
+function convert(member) {
+  return {
+    id:       member.userId,
+    joinedDate: member.joinedDate
   }
 }
 
