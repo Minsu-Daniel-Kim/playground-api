@@ -20,14 +20,14 @@ var schema = new mongoose.Schema({
 
 schema.methods.to_json = function () {
   return {
-    id : this.id,
-    name: this.name,
-    desciption: this.desciption,
-    reputation: this.reputation,
+    id :         this.id,
+    name:        this.name,
+    desciption:  this.desciption,
+    reputation:  this.reputation,
     createdDate: this.createdDate,
-    createdBy: this.createdBy,
-    state: this.state,
-    members: this.members.map(member => convert(member)),
+    owner:       this.createdBy,
+    state:       this.state,
+    members:     this.members.map(member => convert(member)),
   }
 }
 

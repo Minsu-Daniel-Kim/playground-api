@@ -129,10 +129,10 @@ function updateCardState(req, res, action) {
 
     fsm.goto(card.currentState());
     if (fsm.cannot(action)) {
-      return res.send({message: `Fail to ${action}. card state is: ${card.currentState()}`})
+      return res.send({message: `Card cannot be ${action}. current state: ${card.currentState()}`})
     }
     if (fsm[action](card, req.body) === false) {
-      return res.send({message: `Fail to ${action}. userId: ${req.body.userId}, staking: ${req.body.staking}`})
+      return res.send({message: `Card cannot be ${action}. userId: ${req.body.userId}, staking: ${req.body.staking}`})
     }
 
     card.state = fsm.state
