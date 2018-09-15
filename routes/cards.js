@@ -5,6 +5,7 @@ var randomstring = require("randomstring");
 var mongoose = require('mongoose');
 
 var Card = require('../models/cards');
+var agenda = require('../jobs/agenda');
 
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
@@ -98,7 +99,18 @@ router.post('/:id/submission', function(req, res, next) {
   });
 })
 
+router.post('/:id/ready', function(req, res, next) {
+  action = 'ready'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
+// agenda.define('slash', (job, done) => {
+//   console.log(job, done);
+// });
+
 router.get('/:id', function(req, res, next) {
+  // agenda.schedule("in 1 seconds", 'slash', {cardId: req.params.id})
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
     if (card === null) return notFound(req, res)
@@ -150,9 +162,22 @@ router.post('/:id/ready', function(req, res, next) {
   return updateCardState(req, res, action)
 })
 
+
+agenda.define('slash', (job, done) => {
+  console.log(job.attrs.data.message);
+
+  // Card.findOne({id: cardId}, function (err, card) {
+    // 1. slash card point
+
+    // re-trigger
+  //   agenda.schedule("in 1 hour", 'slash', {cardId: cardId})
+  // }
+});
+
 router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
+  agenda.schedule("in 1 hour", 'slash', {cardId: req.params.id})
   return updateCardState(req, res, action)
 })
 
