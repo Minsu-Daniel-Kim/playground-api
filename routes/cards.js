@@ -1,9 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var StateMachine = require('javascript-state-machine');
-var Card = require('../models/cards');
+var randomstring = require("randomstring");
 var mongoose = require('mongoose');
 
+var Card = require('../models/cards');
 
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
@@ -179,7 +180,7 @@ router.post('/:id/reject', function(req, res, next) {
   return updateCardState(req, res, action)
 })
 
-// TODO for development
+// For development
 router.post('/:id/reset', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
@@ -192,6 +193,27 @@ router.post('/:id/reset', function(req, res, next) {
     })
   });
 })
+
+router.post('/:id/comment', function(req, res, next) {
+  Card.findOne({id: req.params.id}, function (err, card) {
+    if (err) return console.error(err);
+    if (card === null) return notFound(req, res)
+
+    card.comments.push({
+      id: "comment_" + randomstring.generate(8),
+      parentId: req.body.parentId,
+      title: req.body.title,
+      content: req.body.content,
+      userId: req.body.userId,
+      createdDate: Date.now()})
+
+    card.save(function (err, saved) {
+      if (err) return res.send(err);
+      return res.send({message: "success to register comment"})
+    })
+  });
+})
+
 
 
 

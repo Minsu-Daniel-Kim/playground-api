@@ -10,7 +10,7 @@ var cardSchema = new mongoose.Schema({
       id: String,
       parentId: String,
       title: String,
-      description: String,
+      content: String,
       userId: String,
       createdDate: Date,
       approved: Boolean,
@@ -76,12 +76,16 @@ function convert(comment) {
     id: comment.id,
     parentId: comment.parentId,
     title: comment.title,
-    description: comment.description,
+    content: comment.content,
     userId: comment.userId,
     createdDate: comment.createdDate,
-    approved: comment.approved,
-    approver: comment.approver
+    approved: getOrDefault(comment.approved, false),
+    approver: getOrDefault(comment.approver, null)
   }
+}
+
+function getOrDefault(value, defaultValue) {
+  return value !== undefined ? value : defaultValue;
 }
 
 cardSchema.methods.all = function () {
@@ -191,7 +195,7 @@ var randomstring = require("randomstring");
 //   comments: [
 //     {
 //       title: "질문",
-//       description: "피처별 중요도는 어떻게 확인하나요??",
+//       content: "피처별 중요도는 어떻게 확인하나요??",
 //       userId: "user_xqm5wXXas",
 //       createdDate: Date.now(),
 //       approved: false,
