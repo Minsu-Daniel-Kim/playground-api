@@ -143,6 +143,12 @@ function updateCardState(req, res, action) {
   });
 }
 
+router.post('/:id/ready', function(req, res, next) {
+  action = 'ready'
+  // TODO validate
+  return updateCardState(req, res, action)
+})
+
 router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
@@ -171,6 +177,20 @@ router.post('/:id/reject', function(req, res, next) {
   action = 'rejected'
   // TODO validate
   return updateCardState(req, res, action)
+})
+
+// TODO for development
+router.post('/:id/reset', function(req, res, next) {
+  Card.findOne({id: req.params.id}, function (err, card) {
+    if (err) return console.error(err);
+    if (card === null) return notFound(req, res)
+    card.clear()
+    card.state = 'BACKLOG'
+    card.save(function (err, saved) {
+      if (err) return res.send(err);
+      return res.send(saved.detail())
+    })
+  });
 })
 
 
