@@ -13,7 +13,6 @@ var schema = new mongoose.Schema({
       projectId: String,
       startedDate: Date,
       endedDate: Date,
-      point: Number,
       stacking: Number
       }
     ]
@@ -26,8 +25,10 @@ schema.methods.to_json = function () {
     email: this.email,
     accountAddress: this.accountAddress,
     createdDate: this.createdDate,
+    coinBalance: 0,
     reputation: this.reputation,
-    profileImageUrl: this.profileImageUrl
+    profileImageUrl: this.profileImageUrl,
+    projects: this.projects
   }
 }
 
