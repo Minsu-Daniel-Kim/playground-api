@@ -28,23 +28,21 @@ var fsm = new StateMachine({
   ],
   methods: {
     onReady: function(lifecycle, card, params) {
-      console.log('onReady');
       if (params.point === undefined || params.point < 0)
-        return false;
-
-      card.point = params.point;
-      card.timeLimit = 1440; // TODO set timeLimit based on point
+        return false
+      card.point = params.point
+      card.timeLimit = card.point * 60 * 1000
     },
     onAssigned: function(lifecycle, card, params) {
-      console.log('onAssigned');
       if (params.userId === undefined || params.staking === undefined)
         return false;
 
-      card.assigneeId = params.userId;
-      card.staking = params.staking;
-      card.ttl = card.timeLimit;
-      card.startedAt = Date.now()
-      card.dueDate = Date.now() + card.timeLimit * 1000;
+      card.assigneeId   = params.userId;
+      card.staking      = params.staking;
+      card.ttl          = card.timeLimit;
+      card.remainPoint  = card.point;
+      card.startedAt    = Date.now()
+      card.dueDate      = Date.now() + card.timeLimit * 1000;
       // TODO add history
       // card.history.add({})
     },
@@ -99,18 +97,7 @@ router.post('/:id/submission', function(req, res, next) {
   });
 })
 
-router.post('/:id/ready', function(req, res, next) {
-  action = 'ready'
-  // TODO validate
-  return updateCardState(req, res, action)
-})
-
-// agenda.define('slash', (job, done) => {
-//   console.log(job, done);
-// });
-
 router.get('/:id', function(req, res, next) {
-  // agenda.schedule("in 1 seconds", 'slash', {cardId: req.params.id})
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
     if (card === null) return notFound(req, res)
@@ -162,22 +149,45 @@ router.post('/:id/ready', function(req, res, next) {
   return updateCardState(req, res, action)
 })
 
-
 agenda.define('slash', (job, done) => {
-  console.log(job.attrs.data.message);
+  let cardId = job.attrs.data.cardId
+  console.log(`slash ${cardId} ${new Date().toLocaleString()}`)
+  Card.findOne({id: cardId}, function (err, card) {
+    if (err) return console.error(err);
+    if (card.currentState() != 'IN_PROGRESS' || card.ttl < 0) {
+      done();
+      return;
+    }
+    card.ttl -= 60**2 * 100060
+    console.log(`retrigger ${card.ttl}`)
 
-  // Card.findOne({id: cardId}, function (err, card) {
-    // 1. slash card point
+    if (card.ttl > 0) {
+      card.remainPoint -= 1
+      // TODO slashing
+    } else {
+      job.remove()
+      fsm.goto(card.currentState());
+      fsm.timesup(card)
+      // TODO staking transfer
+    }
 
-    // re-trigger
-  //   agenda.schedule("in 1 hour", 'slash', {cardId: cardId})
-  // }
-});
+    card.save(function (err, saved) {
+      if (err) return console.error(err);
+      return saved;
+    })
+    done()
+  });
+})
 
 router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
-  agenda.schedule("in 1 hour", 'slash', {cardId: req.params.id})
+
+  var job = agenda.create('slash',{cardId: req.params.id})
+  job.repeatEvery('1 hour', 'slash', {cardId: req.params.id})
+  job.save();
+
+// agenda.now('sendMail', {cardId: req.params.id})
   return updateCardState(req, res, action)
 })
 

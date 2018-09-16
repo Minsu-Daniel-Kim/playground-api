@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "agenda": "^2.0.2",
+    "agendash": "^0.4.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^6.0.0",

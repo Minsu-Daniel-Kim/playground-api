@@ -20,14 +20,14 @@ var cardSchema = new mongoose.Schema({
   startedDate: Date,
   dueDate: Date,
   timeLimit: Number,
+  ttl: Number,            // card countdown time
   point: Number,          // maximum possible gain point
+  remainPoint: Number,    // how much assignee can gain
 
   // Assignee
   assigneeId: String,       // assignee id
   staking: Number,        // how much assignee staked
   submissionUrl: String,  // jupyter notebook address
-  gained: Number,         // how much assignee gained
-  ttl: Number,            // card countdown time
 
   // meta information
   createdDate: Date,    // card created time
@@ -66,6 +66,10 @@ cardSchema.methods.detail = function () {
     state: this.state,
     assigneeId: this.assigneeId,
     point: this.point,
+    remainPoint: this.remainPoint,
+    ttl: this.ttl,
+    startedDate: this.startedDate,
+    dueDate: this.dueDate,
     submissionUrl: this.submissionUrl,
     comments: this.comments.map(comment => convert(comment))
   }
@@ -109,10 +113,12 @@ cardSchema.methods.all = function () {
 
 cardSchema.methods.clear = function () {
   this.startedDate = null
+  this.dueDate = null
   this.assigneeId = null
   this.staking = null
   this.submissionUrl = null
   this.ttl = -1
+  this.remainPoint = null
 }
 
 cardSchema.methods.currentState = function () {
