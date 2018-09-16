@@ -24,12 +24,12 @@ module.exports.cardAssigned = function(cardId, userId) {
 
 var sendMail = function (params) {
   let transporter = nodeMailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_HOST,
+    secure: process.env.SMTP_SECURE,
     auth: {
-      user: "enei2cpwvlmrfm7m@ethereal.email",
-      pass: "FEyAbxx9NVFHs4dBam"
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD
     }
   });
 
