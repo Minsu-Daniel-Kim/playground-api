@@ -12,7 +12,8 @@ var schema = new mongoose.Schema({
   history: [],
   members: [{
     userId: String,
-    joinedDate: Date
+    joinedDate: Date,
+    role: []
   }],
   state: String,    // editing, OPEN, RUNNING, CLOSED
   private: Boolean  // open <-> private
@@ -33,8 +34,9 @@ schema.methods.to_json = function () {
 
 function convert(member) {
   return {
-    id:       member.userId,
-    joinedDate: member.joinedDate
+    id:         member.userId,
+    joinedDate: member.joinedDate,
+    role:       member.role
   }
 }
 
