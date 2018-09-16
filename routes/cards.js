@@ -104,9 +104,10 @@ var fsm = new StateMachine({
       mailer.cardAssigned(card, params.userId)
       days = dateDiffInDays(card.dueDate, card.startedAt)
       if (days > 1) {
-        agenda.schedule(moment().add(days-1, 'days').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: false})
+        firstCallDate = moment().startOf('day').hour(21).add(days-1, 'hours')
+        agenda.schedule(firstCallDate.calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: false})
       }
-      agenda.schedule(moment().add(days, 'days').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: true})
+      agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: true})
     },
     onSubmitted: function(lifecycle, card, params) {
       console.log('onSubmitted')
