@@ -3,6 +3,7 @@ var router = express.Router();
 var StateMachine = require('javascript-state-machine');
 var randomstring = require("randomstring");
 var mongoose = require('mongoose');
+var moment = require('moment');
 
 var Card = require('../models/cards');
 var agenda = require('../jobs/agenda');
@@ -11,6 +12,59 @@ var mailer = require('../jobs/mailer');
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
+
+// TODO move to jobs dir
+agenda.define('slash', (job, done) => {
+  let cardId = job.attrs.data.cardId
+  console.log(`slash ${cardId} ${new Date().toLocaleString()}`)
+  Card.findOne({id: cardId}, function (err, card) {
+    if (err) return console.error(err);
+    if (card.currentState() != 'IN_PROGRESS' || card.ttl < 0) {
+      done();
+      return;
+    }
+
+    card.ttl -= 60**2 * 100060
+    if (card.ttl > 0) {
+      card.remainPoint -= 1
+      // TODO slashing
+    } else {
+      job.remove()
+      fsm.goto(card.currentState());
+      fsm.timesup(card)
+      // TODO staking transfer
+    }
+
+    card.save(function (err, saved) {
+      if (err) return console.error(err);
+      return saved;
+    })
+    done()
+  });
+})
+
+agenda.define('notiExpiration', (job, done) => {
+  let cardId = job.attrs.data.cardId
+  let userId = job.attrs.data.userId
+  let lastCall = job.attrs.data.lastCall
+
+  Card.findOne({id: cardId}, function (err, card) {
+    console.log(`notiFrstCall ${cardId} ${new Date().toLocaleString()}`)
+    if (err) return console.error(err);
+    if (card.currentState() == 'IN_PROGRESS' && card.ttl > 0) {
+      mailer.notiExpiration(card, userId, lastCall)
+    }
+    done();
+  });
+})
+
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function dateDiffInDays(a, b) {
+  const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
 
 
 // BACKLOG, NOT_STARTED, IN_PROGRESS, IN_REVIEW, COMPLETE
@@ -32,7 +86,7 @@ var fsm = new StateMachine({
       if (params.point === undefined || params.point < 0)
         return false
       card.point = params.point
-      card.timeLimit = card.point * 60 * 1000
+      card.timeLimit = card.point * 60**2 * 1000
     },
     onAssigned: function(lifecycle, card, params) {
       if (params.userId === undefined || params.staking === undefined)
@@ -42,10 +96,17 @@ var fsm = new StateMachine({
       card.staking      = params.staking;
       card.ttl          = card.timeLimit;
       card.remainPoint  = card.point;
-      card.startedAt    = Date.now()
-      card.dueDate      = Date.now() + card.timeLimit * 1000;
+      card.startedAt    = new Date()
+      card.dueDate      = new Date() + card.timeLimit * 1000;
       // TODO add history
       // card.history.add({})
+
+      mailer.cardAssigned(card, params.userId)
+      days = dateDiffInDays(card.dueDate, card.startedAt)
+      if (days > 1) {
+        agenda.schedule(moment().add(days-1, 'days').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: false})
+      }
+      agenda.schedule(moment().add(days, 'days').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: true})
     },
     onSubmitted: function(lifecycle, card, params) {
       console.log('onSubmitted')
@@ -150,41 +211,9 @@ router.post('/:id/ready', function(req, res, next) {
   return updateCardState(req, res, action)
 })
 
-agenda.define('slash', (job, done) => {
-  let cardId = job.attrs.data.cardId
-  console.log(`slash ${cardId} ${new Date().toLocaleString()}`)
-  Card.findOne({id: cardId}, function (err, card) {
-    if (err) return console.error(err);
-    if (card.currentState() != 'IN_PROGRESS' || card.ttl < 0) {
-      done();
-      return;
-    }
-    card.ttl -= 60**2 * 100060
-    console.log(`retrigger ${card.ttl}`)
-
-    if (card.ttl > 0) {
-      card.remainPoint -= 1
-      // TODO slashing
-    } else {
-      job.remove()
-      fsm.goto(card.currentState());
-      fsm.timesup(card)
-      // TODO staking transfer
-    }
-
-    card.save(function (err, saved) {
-      if (err) return console.error(err);
-      return saved;
-    })
-    done()
-  });
-})
-
 router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
-
-  mailer.cardAssigned(req.params.id, req.body.userId)
   var job = agenda.create('slash',{cardId: req.params.id})
   job.repeatEvery('1 hour', 'slash', {cardId: req.params.id})
   job.save();
