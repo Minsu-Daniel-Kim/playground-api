@@ -86,7 +86,7 @@ var fsm = new StateMachine({
       if (params.point === undefined || params.point < 0)
         return false
       card.point = params.point
-      card.timeLimit = card.point * 60**2 * 1000
+      card.timeLimit = card.point * _MS_PER_DAY
     },
     onAssigned: function(lifecycle, card, params) {
       if (params.userId === undefined || params.staking === undefined)
