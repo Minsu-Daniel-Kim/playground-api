@@ -1,11 +1,28 @@
 var nodeMailer = require('nodemailer');
 var bodyParser = require('body-parser');
 
-// app.use(express.static(path.join(__dirname, 'public')));
-// bodyParser.urlencoded({extended: true}
-// app.use(bodyParser.json());
+var Card = require('../models/cards');
+var User = require('../models/users');
 
-const sendMail = function (params) {
+// TODO agenda job
+module.exports.cardAssigned = function(cardId, userId) {
+  User.findOne({id: userId}, function (err, user) {
+    if (err) return console.error(err)
+
+    Card.findOne({id: cardId}, function (err, card) {
+      if (err) return console.error(err)
+
+      sendMail({
+        to: user.email,
+        subject: `Cheer up ${user.nickname}!`,
+        body: `You just started ${card.title}! Good luck!`
+      })
+    })
+  })
+
+}
+
+var sendMail = function (params) {
   let transporter = nodeMailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
@@ -31,5 +48,3 @@ const sendMail = function (params) {
     console.log('Message %s sent: %s', info.messageId, info.response);
   });
 }
-
-module.exports = sendMail;
