@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 
 var Card = require('../models/cards');
 var agenda = require('../jobs/agenda');
+var sendMail = require('../jobs/mailer');
 
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
@@ -183,6 +184,11 @@ router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
 
+  sendMail({
+    to: 'email@gmail.com',
+    subject: "Card assigned",
+    body: "Card is started, Cheers!"
+  })
   var job = agenda.create('slash',{cardId: req.params.id})
   job.repeatEvery('1 hour', 'slash', {cardId: req.params.id})
   job.save();

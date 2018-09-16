@@ -8,6 +8,7 @@
   "dependencies": {
     "agenda": "^2.0.2",
     "agendash": "^0.4.0",
+    "body-parser": "^1.18.3",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^6.0.0",
@@ -17,6 +18,7 @@
     "javascript-state-machine": "^3.1.0",
     "mongoose": "^5.2.13",
     "morgan": "~1.9.0",
+    "nodemailer": "^4.6.8",
     "pug": "2.0.0-beta11",
     "randomstring": "^1.1.5"
   },
