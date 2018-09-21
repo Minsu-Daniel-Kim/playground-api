@@ -119,6 +119,7 @@ cardSchema.methods.clear = function () {
   this.submissionUrl = null
   this.ttl = -1
   this.remainPoint = null
+  this.state = 'NOT_STARTED'
 }
 
 cardSchema.methods.currentState = function () {

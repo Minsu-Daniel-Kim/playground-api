@@ -13,25 +13,28 @@ mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
+const _MS_PER_HOUR = 1000 * 60 * 60;
+
 // TODO move to jobs dir
 agenda.define('slash', (job, done) => {
-  let cardId = job.attrs.data.cardId
-  console.log(`slash ${cardId} ${new Date().toLocaleString()}`)
-  Card.findOne({id: cardId}, function (err, card) {
+  console.log(`slash ${job.attrs.data.cardId} ${new Date().toLocaleString()}`)
+
+  Card.findOne({id: job.attrs.data.cardId}, function (err, card) {
     if (err) return console.error(err);
     if (card.currentState() != 'IN_PROGRESS' || card.ttl < 0) {
+      job.remove()
       done();
       return;
     }
 
-    card.ttl -= 60**2 * 100060
+    card.ttl -= _MS_PER_HOUR
     if (card.ttl > 0) {
       card.remainPoint -= 1
       // TODO slashing
     } else {
-      job.remove()
       fsm.goto(card.currentState());
       fsm.timesup(card)
+      job.remove()
       // TODO staking transfer
     }
 
@@ -39,6 +42,7 @@ agenda.define('slash', (job, done) => {
       if (err) return console.error(err);
       return saved;
     })
+
     done()
   });
 })
@@ -57,15 +61,6 @@ agenda.define('notiExpiration', (job, done) => {
     done();
   });
 })
-
-const _MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-function dateDiffInDays(a, b) {
-  const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-  const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-  return Math.floor((utc2 - utc1) / _MS_PER_DAY);
-}
-
 
 // BACKLOG, NOT_STARTED, IN_PROGRESS, IN_REVIEW, COMPLETE
 var fsm = new StateMachine({
@@ -97,16 +92,11 @@ var fsm = new StateMachine({
       card.ttl          = card.timeLimit;
       card.remainPoint  = card.point;
       card.startedAt    = new Date()
-      card.dueDate      = new Date() + card.timeLimit * 1000;
+      card.dueDate      = new Date() + card.timeLimit * _MS_PER_HOUR;
       // TODO add history
       // card.history.add({})
 
       mailer.cardAssigned(card, params.userId)
-      days = dateDiffInDays(card.dueDate, card.startedAt)
-      if (days > 1) {
-        firstCallDate = moment().startOf('day').hour(21).add(days-1, 'hours')
-        agenda.schedule(firstCallDate.calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: false})
-      }
       agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId, lastCall: true})
     },
     onSubmitted: function(lifecycle, card, params) {
@@ -180,11 +170,6 @@ router.get('/:id/detail', function(req, res, next) {
   });
 });
 
-function notFound(req, res) {
-  res.statusCode = 400;
-  res.send({message: `Can't find card: ${req.params.id}`})
-}
-
 function updateCardState(req, res, action) {
   Card.findOne({id: req.params.id}, function (err, card) {
     if (err) return console.error(err);
@@ -215,8 +200,8 @@ router.post('/:id/ready', function(req, res, next) {
 router.post('/:id/assign', function(req, res, next) {
   action = 'assigned'
   // TODO validate
-  var job = agenda.create('slash',{cardId: req.params.id})
-  job.repeatEvery('1 hour', 'slash', {cardId: req.params.id})
+  var job = agenda.create('slash', {cardId: req.params.id})
+  job.repeatEvery('1 hour', { skipImmediate: true })
   job.save();
 
 // agenda.now('sendMail', {cardId: req.params.id})
@@ -280,5 +265,10 @@ router.post('/:id/comment', function(req, res, next) {
     })
   });
 })
+
+function notFound(req, res) {
+  res.statusCode = 400;
+  res.send({message: `Can't find card: ${req.params.id}`})
+}
 
 module.exports = router;
