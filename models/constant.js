@@ -1,0 +1,10 @@
+var CARD_STATE = {
+  "BACKLOG":      "BACKLOG",
+  "NOT_STARTED":  "NOT_STARTED",
+  "IN_PROGRESS":  "IN_PROGRESS",
+  "IN_REVIEW":    "IN_REVIEW",
+  "COMPLETE":     "COMPLETE"
+}
+Object.freeze(CARD_STATE)
+
+module.exports.CARD_STATE = CARD_STATE
