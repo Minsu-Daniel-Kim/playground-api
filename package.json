@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "dev": "nodemon app.js",
+    "prod": "npm start"
   },
   "dependencies": {
     "agenda": "^2.0.2",
@@ -20,6 +22,7 @@
     "mongoose": "^5.2.13",
     "morgan": "~1.9.0",
     "nodemailer": "^4.6.8",
+    "nodemon": "^1.18.4",
     "pug": "2.0.0-beta11",
     "randomstring": "^1.1.5"
   },
