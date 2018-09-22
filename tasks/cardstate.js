@@ -1,15 +1,17 @@
 var StateMachine = require('javascript-state-machine');
-var CARD_STATE = require('../models/constant');
+var cardState = require('../models/constant');
+
+console.log(`${cardState.BACKLOG} ${cardState.NOT_STARTED} ${cardState.IN_PROGRESS}`)
 
 var fsm = new StateMachine({
   init: 'BACKLOG',
   transitions: [
-    { name: 'ready',      from: CARD_STATE.BACKLOG,     to: CARD_STATE.NOT_STARTED },
-    { name: 'assigned',   from: CARD_STATE.NOT_STARTED, to: CARD_STATE.IN_PROGRESS },
-    { name: 'submitted',  from: CARD_STATE.IN_PROGRESS, to: CARD_STATE.IN_REVIEW },
-    { name: 'accepted',   from: CARD_STATE.IN_REVIEW,   to: CARD_STATE.COMPLETE },
-    { name: 'rejected',   from: CARD_STATE.IN_REVIEW,   to: CARD_STATE.IN_PROGRESS },
-    { name: 'gaveup',     from: CARD_STATE.IN_PROGRESS, to: CARD_STATE.NOT_STARTED },
+    { name: 'ready',      from: cardState.BACKLOG,     to: cardState.NOT_STARTED },
+    { name: 'assigned',   from: cardState.NOT_STARTED, to: cardState.IN_PROGRESS },
+    { name: 'submitted',  from: cardState.IN_PROGRESS, to: cardState.IN_REVIEW },
+    { name: 'accepted',   from: cardState.IN_REVIEW,   to: cardState.COMPLETE },
+    { name: 'rejected',   from: cardState.IN_REVIEW,   to: cardState.IN_PROGRESS },
+    { name: 'gaveup',     from: cardState.IN_PROGRESS, to: cardState.NOT_STARTED },
     // TODO go to where?
     { name: 'timesup', from: 'IN_PROGRESS',  to: 'BACKLOG' },
     { name: 'goto', from: '*', to: function(state) { return state } }

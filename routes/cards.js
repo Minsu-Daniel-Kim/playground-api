@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var moment = require('moment');
 
 var Card = require('../models/cards');
-var CARD_STATE = require('../models/constant');
+var cardState = require('../models/constant');
 var agenda = require('../jobs/agenda');
 var mailer = require('../jobs/mailer');
 var fsm = require('../tasks/cardstate');
@@ -37,14 +37,11 @@ agenda.define('slash', (job, done) => {
       job.remove()
       // TODO staking transfer
     }
-    done()
-    return card
-  })
-  .then(function(card) {
     card.save(function (err, saved) {
       if (err) return console.error(err);
       return saved;
     })
+    done()
   })
   .catch(function(error){
     console.error(error)
@@ -56,7 +53,6 @@ agenda.define('notiExpiration', (job, done) => {
   let userId = job.attrs.data.userId
 
   Card.findOne({id: cardId}, function (err, card) {
-    console.log(`notiFrstCall ${cardId} ${new Date().toLocaleString()}`)
     if (err) return console.error(err);
     if (card.currentState() == 'IN_PROGRESS' && card.ttl > 0) {
       mailer.notiExpiration(card, userId)
@@ -72,7 +68,6 @@ router.get('/', function(req, res, next) {
     return res.send(cards);
   })
 });
-
 
 router.post('/:id/submission', function(req, res, next) {
   Card.findOne({id: req.params.id}, function (err, card) {
@@ -178,7 +173,7 @@ router.post('/:id/reset', function(req, res, next) {
     if (err) return console.error(err);
     if (card === null) return notFound(req, res)
     card.clear()
-    card.state = 'BACKLOG'
+    card.state = cardState.BACK_LOG
     card.save(function (err, saved) {
       if (err) return res.send(err);
       return res.send(saved.detail())
@@ -204,6 +199,29 @@ router.post('/:id/comment', function(req, res, next) {
       return res.send({message: "success to register comment"})
     })
   });
+})
+
+router.post('/:id/rate', function(req, res, next) {
+  Card.findOne({id: req.params.id})
+  .then(function (card) {
+    console.log(`${card.currentState()} ${cardState.BACK_LOG}`)
+    if (card.currentState() !== cardState.IN_REVIEW)
+      return res.send({message: `Can't rate card state: ${card.currentState()}`})
+    // TODO validate req.body.userId is in project
+    // TODO validate req.body.userId already rated card
+    card.rates.push({
+      userId: req.body.userId,
+      point: req.body.point,
+      createdDate: new Date()
+    })
+    card.save(function (err, saved) {
+      if (err) return res.send(err);
+      return res.send({message: "success to register comment"})
+    })
+  })
+  .catch(function (err) {
+    return console.error(err)
+  })
 })
 
 function notFound(req, res) {

@@ -34,6 +34,12 @@ var cardSchema = new mongoose.Schema({
   createdBy: String,  // card creator id
   state: String,
 
+  rates: [{
+    userId: String,
+    point: Number,
+    createdDate: Date
+  }],
+
   // history
   history: []
 });
@@ -58,7 +64,6 @@ cardSchema.methods.shorten = function () {
 }
 
 cardSchema.methods.detail = function () {
-  // TODO add more fields
   return {
     id: this.id,
     title: this.title,
@@ -71,11 +76,12 @@ cardSchema.methods.detail = function () {
     startedDate: this.startedDate,
     dueDate: this.dueDate,
     submissionUrl: this.submissionUrl,
-    comments: this.comments.map(comment => convert(comment))
+    comments: this.comments.map(comment => toComment(comment)),
+    rates: this.rates.map(rate => toRate(rate))
   }
 }
 
-function convert(comment) {
+function toComment(comment) {
   return {
     id: comment.id,
     parentId: comment.parentId,
@@ -85,6 +91,15 @@ function convert(comment) {
     createdDate: comment.createdDate,
     approved: getOrDefault(comment.approved, false),
     approver: getOrDefault(comment.approver, null)
+  }
+}
+
+// TODO autorization check
+function toRate(rate) {
+  return {
+    userId: rate.userId,
+    point: rate.point,
+    createdDate: rate.createdDate
   }
 }
 
