@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var randomstring = require("randomstring");
 var mongoose = require('mongoose');
-var moment = require('moment');
 
 var Card = require('../models/cards');
 var cardState = require('../models/constant');
@@ -14,7 +13,7 @@ mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-const _MS_PER_HOUR = 1000 * 60 * 60;
+const MS_PER_HOUR = 1000 * 60 * 60;
 
 // TODO move to jobs dir
 agenda.define('slash', (job, done) => {
@@ -27,7 +26,7 @@ agenda.define('slash', (job, done) => {
       return;
     }
 
-    card.ttl -= _MS_PER_HOUR
+    card.ttl -= MS_PER_HOUR
     if (card.ttl > 0) {
       card.remainPoint -= 1
       // TODO slashing
@@ -208,7 +207,10 @@ router.post('/:id/rate', function(req, res, next) {
     if (card.currentState() !== cardState.IN_REVIEW)
       return res.send({message: `Can't rate card state: ${card.currentState()}`})
     // TODO validate req.body.userId is in project
-    // TODO validate req.body.userId already rated card
+
+    if (card.hasRated(req.body.userId))
+      return res.send({message: `already rated: ${req.body.userId}`})
+
     card.rates.push({
       userId: req.body.userId,
       point: req.body.point,

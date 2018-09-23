@@ -1,7 +1,10 @@
 var StateMachine = require('javascript-state-machine');
 var cardState = require('../models/constant');
+var mailer = require('../jobs/mailer');
+var agenda = require('../jobs/agenda');
+var moment = require('moment');
 
-console.log(`${cardState.BACKLOG} ${cardState.NOT_STARTED} ${cardState.IN_PROGRESS}`)
+const MS_PER_HOUR = 1000 * 60 * 60;
 
 var fsm = new StateMachine({
   init: 'BACKLOG',
@@ -32,7 +35,7 @@ var fsm = new StateMachine({
       card.ttl          = card.timeLimit;
       card.remainPoint  = card.point;
       card.startedAt    = new Date()
-      card.dueDate      = new Date() + card.timeLimit * _MS_PER_HOUR;
+      card.dueDate      = new Date() + card.timeLimit * MS_PER_HOUR;
       // TODO add history
       // card.history.add({})
 

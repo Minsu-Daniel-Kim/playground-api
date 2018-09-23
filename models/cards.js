@@ -143,6 +143,10 @@ cardSchema.methods.currentState = function () {
   return this.state
 }
 
+cardSchema.methods.hasRated = function(userId) {
+  return this.rates.map(rate => rate.userId).includes(userId)
+}
+
 var Card = mongoose.model('Card', cardSchema);
 // TODO card status as enum
 module.exports = Card;
