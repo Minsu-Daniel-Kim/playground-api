@@ -1,9 +1,5 @@
 const Agenda = require('agenda');
 
-// const dbendpoint = 'mongodb://localhost:27017/Snowball';
-// let agenda = new Agenda({db: {address: dbendpoint, collection: 'jobs'}});
-// const agenda = new Agenda({defaultLockLifetime: 10000});
-
 const agenda = new Agenda({db: {address: process.env.DATABASE_URL, collection: 'agendaJobs'}})
   .defaultLockLifetime(0)
   .processEvery('5 seconds')

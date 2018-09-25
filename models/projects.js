@@ -40,22 +40,17 @@ function convert(member) {
   }
 }
 
-var Project = mongoose.model('Project', schema);
-// new Project({
-//   id: "project_XwPp9xaz",
-//   name: "부트캠프 1기",
-//   desciption: "",
-//   reputation: 100,
-//   createdDate: Date.now() - (24*60*60*1000*4*30),
-//   createdBy: "user_xfdmwXAs",
-//   history: [],
-//   members: [
-//   {
-//     userId: "user_xqm5wXXas",
-//     joinedDate: Date.now(),
-//   }],
-//   state: 'CLOSED',
-//   private: false
-// }).save()
+schema.methods.enroll = function(userId) {
+  return this.members.push({
+    userId: userId,
+    joinedDate: new Date(),
+    role: ['MEMBER']
+  })
+}
 
+schema.methods.enrolled = function(userId) {
+  return this.members.map(member => member.userId).includes(userId)
+}
+
+var Project = mongoose.model('Project', schema);
 module.exports = Project;

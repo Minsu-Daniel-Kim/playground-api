@@ -1,11 +1,13 @@
 var express = require('express');
-var router = express.Router();
-var Project = require('../models/projects');
-var Card = require('../models/cards');
 var mongoose = require('mongoose');
 var randomstring = require("randomstring");
 
-// require('dotenv').load();
+var Project = require('../models/projects');
+var Card = require('../models/cards');
+var User = require('../models/users');
+
+var router = express.Router();
+
 mongoose.connect(process.env.DATABASE_URL);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -33,6 +35,37 @@ router.get('/:id', function(req, res, next) {
   });
 });
 
+router.post('/:id/enroll', function (req, res, next) {
+  let projectId = req.params.id
+  let userId = req.body.userId
+  let staking = req.body.staking
+  if (projectId === undefined || userId === undefined || staking === undefined) {
+    console.log('here')
+    return res.send({message: `invalid argument: ${projectId}, ${userId}, ${staking}`})
+  }
+
+  Project.findOne({id: projectId}, function(err, project) {
+    if (project === null)
+      return res.send({message: `Cant find project: ${projectId}`})
+    if (project.enrolled(userId))
+      return res.send({message: `Alerady enrolled: ${userId}`})
+
+    project.enroll(userId)
+    project.save()
+
+    User.findOne({id: userId}, function(err, user) {
+      if (user === null)
+        return res.send({message: `Cant find user: ${userId}`})
+      if (user.enrolled(pojectId))
+        return res.send({message: `Alerady enrolled: ${pojectId}`})
+
+      user.enroll(projetId, staking)
+      user.save()
+    })
+    return res.send({message: `Success to enroll`})
+  })
+})
+
 router.get('/:id/cards', function(req, res, next) {
   Card.find({projectId: req.params.id}, function (err, cards) {
     if (err) return console.error(err);
@@ -42,6 +75,7 @@ router.get('/:id/cards', function(req, res, next) {
   });
 });
 
+// project에 카드를 생성한다
 router.post('/:id/card', function(req, res, next) {
   if (req.body.userId === undefined || req.body.userId === null) {
     res.statusCode = 400

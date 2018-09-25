@@ -12,11 +12,12 @@ var schema = new mongoose.Schema({
   role: String,
   projects: [{
       projectId: String,
+      joinedAt: Date,
       startedDate: Date,
       endedDate: Date,
-      stacking: Number
-      }
-    ]
+      staking: Number
+    }
+  ]
 });
 
 schema.methods.to_json = function () {
@@ -32,6 +33,18 @@ schema.methods.to_json = function () {
     profileImageUrl: this.profileImageUrl,
     projects: this.projects
   }
+}
+
+schema.methods.enroll = function (projectId, staking) {
+  this.projects.push({
+    projectId: projectId,
+    staking: staking,
+    joinedAt: new Date()
+  })
+}
+
+schema.methods.enrolled = function(projectId) {
+  return this.projects.map(project => project.projectId).includes(projectId)
 }
 
 var User = mongoose.model('User', schema);
