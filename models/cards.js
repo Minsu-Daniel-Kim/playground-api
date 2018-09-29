@@ -1,7 +1,8 @@
 var mongoose = require('mongoose');
+var cardState = require('../models/constant');
 
 var cardSchema = new mongoose.Schema({
-  id : String,
+  id: String,
   projectId: String,
   title: String,
   description: String,
@@ -44,14 +45,15 @@ var cardSchema = new mongoose.Schema({
   history: []
 });
 
-function truncate( n, useWordBoundary ) {
-    if (this.length <= n) { return this; }
-    var subString = this.substr(0, n-1);
-    return (useWordBoundary
-       ? subString.substr(0, subString.lastIndexOf(' '))
-       : subString) + "";
-};
-
+function truncate(n, useWordBoundary) {
+  if (this.length <= n) {
+    return this;
+  }
+  var subString = this.substr(0, n - 1);
+  return (useWordBoundary
+    ? subString.substr(0, subString.lastIndexOf(' '))
+    : subString) + "";
+}
 cardSchema.methods.shorten = function () {
   return {
     id: this.id,
@@ -61,7 +63,7 @@ cardSchema.methods.shorten = function () {
     point: this.point,
     assigneeId: this.assigneeId
   }
-}
+};
 
 cardSchema.methods.detail = function () {
   return {
@@ -79,7 +81,7 @@ cardSchema.methods.detail = function () {
     comments: this.comments.map(comment => toComment(comment)),
     rates: this.rates.map(rate => toRate(rate))
   }
-}
+};
 
 function toComment(comment) {
   return {
@@ -109,7 +111,7 @@ function getOrDefault(value, defaultValue) {
 
 cardSchema.methods.all = function () {
   return {
-    id : this.id,
+    id: this.id,
     title: this.title,
     description: this.description,
     comments: this.comments,
@@ -124,34 +126,34 @@ cardSchema.methods.all = function () {
     createdBy: this.createdBy,
     state: this.state,
   }
-}
+};
 
 cardSchema.methods.clear = function () {
-  this.startedDate = null
-  this.dueDate = null
-  this.assigneeId = null
-  this.staking = null
-  this.submissionUrl = null
-  this.ttl = -1
-  this.remainPoint = null
-  this.state = 'NOT_STARTED'
-}
+  this.startedDate = null;
+  this.dueDate = null;
+  this.assigneeId = null;
+  this.staking = null;
+  this.submissionUrl = null;
+  this.ttl = -1;
+  this.remainPoint = null;
+  this.state = cardState.NOT_STARTED;
+};
 
 cardSchema.methods.currentState = function () {
   if (this.state === undefined)
-    this.state = 'BACKLOG'
+    this.state = cardState.BACKLOG;
   return this.state
-}
+};
 
-cardSchema.methods.hasRated = function(userId) {
+cardSchema.methods.hasRated = function (userId) {
   return this.rates.map(rate => rate.userId).includes(userId)
-}
+};
 
 var Card = mongoose.model('Card', cardSchema);
-// TODO card status as enum
+
 module.exports = Card;
 
-var randomstring = require("randomstring");
+// var randomstring = require("randomstring");
 // new Card({
 //   id: "card_" + randomstring.generate(8),
 //   projectId: "project_XwPp9xaz",

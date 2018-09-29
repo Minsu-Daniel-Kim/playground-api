@@ -1,6 +1,6 @@
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
-var schema = new mongoose.Schema({
+let schema = new mongoose.Schema({
   id: String,
   nickname: String,
   email: String,
@@ -33,7 +33,7 @@ schema.methods.to_json = function () {
     profileImageUrl: this.profileImageUrl,
     projects: this.projects
   }
-}
+};
 
 schema.methods.enroll = function (projectId, staking) {
   this.projects.push({
@@ -41,16 +41,16 @@ schema.methods.enroll = function (projectId, staking) {
     staking: staking,
     joinedAt: new Date()
   })
-}
+};
 
 schema.methods.enrolled = function(projectId) {
   return this.projects.map(project => project.projectId).includes(projectId)
-}
+};
 
-var User = mongoose.model('User', schema);
+let User = mongoose.model('User', schema);
 module.exports = User;
 
-// var user1 = new User({ id: "abcde", nickname: "kitty", email: "rabierre@gmail.com", reputation: 0, point: 0, createdDate: Date.now()});
+// let user1 = new User({ id: "abcde", nickname: "kitty", email: "rabierre@gmail.com", reputation: 0, point: 0, createdDate: Date.now()});
 // user1.save(function (err, user1) {
 //   if (err) return console.error(err);
 //   console.log('success to save')

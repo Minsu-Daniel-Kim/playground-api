@@ -1,29 +1,13 @@
-var express = require('express');
-var router = express.Router();
-var User = require('../models/users');
-var mongoose = require('mongoose');
+let express = require('express');
+let router = express.Router();
+let userModule = require('../modules/users');
 
-mongoose.connect(process.env.DATABASE_URL);
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-
-
-// api for managing
 router.get('/', function(req, res, next) {
-  User.find(function (err, users) {
-    if (err) return console.error(err);
-    // TODO convert
-    return res.send(users);
-  })
+  return userModule.listAll(req, res);
 });
 
 router.get('/:id', function(req, res, next) {
-  User.findOne({id: req.params.id}, function (err, user) {
-    if (err) return console.error(err);
-    if (user !== null)
-      return res.send(user.to_json());
-    return res.send({message: "Can't find user"})
-  })
+  return userModule.getOne(req, res);
 });
 
 module.exports = router;

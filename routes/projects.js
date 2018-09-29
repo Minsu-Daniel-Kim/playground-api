@@ -1,16 +1,11 @@
-var express = require('express');
-var mongoose = require('mongoose');
 var randomstring = require("randomstring");
-
 var Project = require('../models/projects');
 var Card = require('../models/cards');
 var User = require('../models/users');
 
+var express = require('express');
 var router = express.Router();
 
-mongoose.connect(process.env.DATABASE_URL);
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
 
 function notFound(req, res) {
   res.statusCode = 400;

@@ -15,15 +15,14 @@ var fsm = new StateMachine({
     { name: 'accepted',   from: cardState.IN_REVIEW,   to: cardState.COMPLETE },
     { name: 'rejected',   from: cardState.IN_REVIEW,   to: cardState.IN_PROGRESS },
     { name: 'gaveup',     from: cardState.IN_PROGRESS, to: cardState.NOT_STARTED },
-    // TODO go to where?
     { name: 'timesup', from: 'IN_PROGRESS',  to: 'BACKLOG' },
     { name: 'goto', from: '*', to: function(state) { return state } }
   ],
   methods: {
     onReady: function(lifecycle, card, params) {
       if (params.point === undefined || params.point < 0)
-        return false
-      card.point = params.point
+        return false;
+      card.point = params.point;
       card.timeLimit = card.point * _MS_PER_DAY
     },
     onAssigned: function(lifecycle, card, params) {
@@ -37,7 +36,7 @@ var fsm = new StateMachine({
       card.startedAt    = new Date()
       card.dueDate      = new Date() + card.timeLimit * MS_PER_HOUR;
       // TODO add history
-      // card.history.add({})
+      // card.history.push({})
 
       mailer.cardAssigned(card, params.userId)
       agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {cardId: card.id, userId: params.userId})

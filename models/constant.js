@@ -6,6 +6,6 @@ let CARD_STATE = {
   IN_PROGRESS:  "IN_PROGRESS",
   IN_REVIEW:    "IN_REVIEW",
   COMPLETE:     "COMPLETE"
-}
+};
 
-module.exports = Object.freeze(CARD_STATE)
+module.exports = Object.freeze(CARD_STATE);
