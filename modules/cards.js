@@ -196,6 +196,60 @@ cards.rate = function (req, res) {
     })
 };
 
+cards.approveComment = function (req, res) {
+  let cardId = req.params.id;
+  let commentId = req.params.commentId;
+  let userId = req.body.userId;
+
+  Card.findOne({id: cardId})
+    .then(function (card) {
+      if (isMentor(card, userId) !== true) return res.send({message: 'No authority'});
+
+      let comment = card.comments.find(comment => comment.id === commentId);
+      if (comment.approved === true)
+        return res.send(400, {message: 'Comment is already approved'});
+
+      comment.approved = true;
+      comment.approver = userId;
+      card.save(function (err) {
+        if (err) return res.send(err);
+        return res.send({message: "success to approve comment"})
+      })
+
+      // TODO add point to user
+    })
+    .catch(function (err) {
+      return console.error(err)
+    })
+};
+
+cards.cancelApprove = function (req, res) {
+  let cardId = req.params.id;
+  let commentId = req.params.commentId;
+  let userId = req.body.userId;
+
+  Card.findOne({id: cardId})
+    .then(function (card) {
+      if (isMentor(card, userId) !== true) return res.send({message: 'No authority'});
+
+      let comment = card.comments.find(comment => comment.id === commentId);
+      if (comment.approved === false)
+        return res.send(400, {message: 'Comment is not in approved state'});
+
+      comment.approved = false;
+      comment.approver = null;
+      card.save(function (err) {
+        if (err) return res.send(err);
+        return res.send({message: "success to cancel approve comment"})
+      })
+
+      // TODO sub point to user
+    })
+    .catch(function (err) {
+      return console.error(err)
+    })
+};
+
 function notFound(req, res) {
   res.statusCode = 400;
   res.send({message: `Can't find card: ${req.params.id}`})

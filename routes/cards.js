@@ -52,6 +52,15 @@ router.post('/:id/rate', function (req, res, next) {
   return cardModule.rate(req, res);
 });
 
+router.post('/:id/comments/:commentId/approve', function (req, res, next) {
+  return cardModule.approveComment(req, res);
+});
+
+router.post('/:id/comments/:commentId/cancel-approve', function (req, res, next) {
+  return cardModule.cancelApprove(req, res);
+});
+
+
 // WARN: For development
 router.post('/:id/reset', function (req, res, next) {
   return cardModule.reset(req, res);
