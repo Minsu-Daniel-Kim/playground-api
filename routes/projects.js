@@ -13,55 +13,52 @@ function notFound(req, res) {
 }
 
 // api for managing
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   Project.find(function (err, projects) {
     if (err) return console.error(err);
-    // TODO convert
     return res.send(projects);
   })
 });
 
-router.get('/:id', function(req, res, next) {
+router.get('/:id', function (req, res, next) {
   Project.findOne({id: req.params.id}, function (err, project) {
     if (err) return console.error(err);
-    if (project !== null)
-      return res.send(project.to_json());
-    return res.send({message: "Can't find project"});
+    if (project === null) return notFound(req, res);
+    return res.send(project.to_json());
   });
 });
 
 router.post('/:id/enroll', function (req, res, next) {
-  let projectId = req.params.id
-  let userId = req.body.userId
-  let staking = req.body.staking
+  let projectId = req.params.id;
+  let userId = req.body.userId;
+  let staking = req.body.staking;
   if (projectId === undefined || userId === undefined || staking === undefined) {
-    console.log('here')
     return res.send({message: `invalid argument: ${projectId}, ${userId}, ${staking}`})
   }
 
-  Project.findOne({id: projectId}, function(err, project) {
+  Project.findOne({id: projectId}, function (err, project) {
     if (project === null)
-      return res.send({message: `Cant find project: ${projectId}`})
+      return res.send(404, {message: `Cant find project: ${projectId}`});
     if (project.enrolled(userId))
-      return res.send({message: `Alerady enrolled: ${userId}`})
+      return res.send(400, {message: `Already enrolled: ${userId}`});
 
-    project.enroll(userId)
-    project.save()
+    project.enroll(userId);
+    project.save();
 
-    User.findOne({id: userId}, function(err, user) {
+    User.findOne({id: userId}, function (err, user) {
       if (user === null)
-        return res.send({message: `Cant find user: ${userId}`})
-      if (user.enrolled(pojectId))
-        return res.send({message: `Alerady enrolled: ${pojectId}`})
+        return res.send(404, {message: `Cant find user: ${userId}`});
+      if (user.enrolled(projectId))
+        return res.send(400, {message: `Already enrolled: ${projectId}`});
 
-      user.enroll(projetId, staking)
+      user.enroll(projectId, staking);
       user.save()
-    })
+    });
     return res.send({message: `Success to enroll`})
   })
-})
+});
 
-router.get('/:id/cards', function(req, res, next) {
+router.get('/:id/cards', function (req, res, next) {
   Card.find({projectId: req.params.id}, function (err, cards) {
     if (err) return console.error(err);
     if (cards !== null)
@@ -71,18 +68,18 @@ router.get('/:id/cards', function(req, res, next) {
 });
 
 // project에 카드를 생성한다
-router.post('/:id/card', function(req, res, next) {
+router.post('/:id/card', function (req, res, next) {
   if (req.body.userId === undefined || req.body.userId === null) {
-    res.statusCode = 400
+    res.statusCode = 400;
     return res.send({message: "no userId"})
   }
 
   Project.findOne({id: req.params.id}, function (err, project) {
     if (err) return console.error(err);
-    if (project === null) return notFound(req, res)
+    if (project === null) return notFound(req, res);
 
     new Card({
-      id: "card_" + randomstring.generate(8),
+      id: "card" + randomstring.generate(8),
       projectId: req.params.id,
       title: getOrDefault(req.body.title, ''),
       description: getOrDefault(req.body.description, ''),
@@ -93,13 +90,13 @@ router.post('/:id/card', function(req, res, next) {
       assigneeId: null,
       submissionUrl: null,
       ttl: null,
-      createdDate:  Date.now(),
+      createdDate: Date.now(),
       createdBy: req.body.userId,
       state: 'BACKLOG',
       gained: null,
       history: [],
       comments: []
-    }).save(function(err, saved) {
+    }).save(function (err, saved) {
       if (err) return res.send(err);
       return res.send({message: "success to register card"});
     });

@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+let randomstring = require("randomstring");
 var cardState = require('../models/constant');
 
 var cardSchema = new mongoose.Schema({
@@ -23,6 +24,7 @@ var cardSchema = new mongoose.Schema({
   timeLimit: Number,
   ttl: Number,            // card countdown time
   point: Number,          // maximum possible gain point
+  gained: Number,         // actually gained point
   remainPoint: Number,    // how much assignee can gain
 
   // Assignee
@@ -35,6 +37,7 @@ var cardSchema = new mongoose.Schema({
   createdBy: String,  // card creator id
   state: String,
 
+  // vote
   rates: [{
     userId: String,
     point: Number,
@@ -54,6 +57,7 @@ function truncate(n, useWordBoundary) {
     ? subString.substr(0, subString.lastIndexOf(' '))
     : subString) + "";
 }
+
 cardSchema.methods.shorten = function () {
   return {
     id: this.id,
@@ -79,7 +83,7 @@ cardSchema.methods.detail = function () {
     dueDate: this.dueDate,
     submissionUrl: this.submissionUrl,
     comments: this.comments.map(comment => toComment(comment)),
-    rates: this.rates.map(rate => toRate(rate))
+    // rates: this.rates.map(rate => toRate(rate))
   }
 };
 
@@ -96,7 +100,6 @@ function toComment(comment) {
   }
 }
 
-// TODO autorization check
 function toRate(rate) {
   return {
     userId: rate.userId,
@@ -148,6 +151,26 @@ cardSchema.methods.currentState = function () {
 cardSchema.methods.hasRated = function (userId) {
   return this.rates.map(rate => rate.userId).includes(userId)
 };
+
+cardSchema.methods.rate = function (userId, point) {
+  this.rates.push({
+    userId: userId,
+    point: point,
+    createdDate: new Date()
+  });
+};
+
+cardSchema.methods.addComment = function (title, content, userId, parentId) {
+  this.comments.push({
+    id: "comment" + randomstring.generate(8),
+    parentId: parentId,
+    title: title,
+    content: content,
+    userId: userId,
+    createdDate: new Date()
+  });
+};
+
 
 var Card = mongoose.model('Card', cardSchema);
 
