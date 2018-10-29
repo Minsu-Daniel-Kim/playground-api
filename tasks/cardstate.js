@@ -1,5 +1,5 @@
 var StateMachine = require('javascript-state-machine');
-var cardState = require('../models/constant');
+var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
 var mailer = require('../jobs/mailer');
 var agenda = require('../jobs/agenda');
@@ -7,35 +7,41 @@ var moment = require('moment');
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 
-var fsm = new StateMachine({
-  init: 'BACKLOG',
+let fsm = new StateMachine({
+  init: CardState.BACKLOG,
   transitions: [
-    { name: 'ready',      from: cardState.BACKLOG,     to: cardState.NOT_STARTED },
-    { name: 'assigned',   from: cardState.NOT_STARTED, to: cardState.IN_PROGRESS },
-    { name: 'submitted',  from: cardState.IN_PROGRESS, to: cardState.IN_REVIEW },
-    { name: 'accepted',   from: cardState.IN_REVIEW,   to: cardState.COMPLETE },
-    { name: 'rejected',   from: cardState.IN_REVIEW,   to: cardState.IN_PROGRESS },
-    { name: 'gaveup',     from: cardState.IN_PROGRESS, to: cardState.NOT_STARTED },
-    { name: 'timesup',    from: 'IN_PROGRESS',  to: 'BACKLOG' },
-    { name: 'goto',       from: '*', to: function(state) { return state } }
+    {name: 'ready', from: CardState.BACKLOG, to: CardState.NOT_STARTED},
+    {name: 'assigned', from: CardState.NOT_STARTED, to: CardState.IN_PROGRESS},
+    {name: 'submitted', from: CardState.IN_PROGRESS, to: CardState.IN_REVIEW},
+    {name: 'accepted', from: CardState.IN_REVIEW, to: CardState.COMPLETE},
+    {name: 'rejected', from: CardState.IN_REVIEW, to: CardState.IN_PROGRESS},
+    {name: 'gaveup', from: CardState.IN_PROGRESS, to: CardState.NOT_STARTED},
+    {name: 'timesup', from: CardState.IN_PROGRESS, to: CardState.BACKLOG},
+    {
+      name: 'goto', from: '*', to: function (state) {
+        return state
+      }
+    }
   ],
   methods: {
     onReady: function (lifecycle, card, params) {
+      console.log('onReady');
       if (params.point === undefined || params.point < 0)
         return false;
       card.point = params.point;
       card.timeLimit = card.point * _MS_PER_DAY
     },
     onAssigned: function (lifecycle, card, params) {
+      console.log('onAssigned');
       if (params.userId === undefined || params.staking === undefined)
         return false;
 
-      card.assigneeId   = params.userId;
-      card.staking      = params.staking;
-      card.ttl          = card.timeLimit;
-      card.remainPoint  = card.point;
-      card.startedAt    = new Date();
-      card.dueDate      = new Date() + card.timeLimit * MS_PER_HOUR;
+      card.assigneeId = params.userId;
+      card.staking = params.staking;
+      card.ttl = card.timeLimit;
+      card.remainPoint = card.point;
+      card.startedAt = new Date();
+      card.dueDate = new Date() + card.timeLimit * MS_PER_HOUR;
       // TODO add history
       // card.history.push({})
 

@@ -1,6 +1,6 @@
 let Card = require('../models/cards');
 let Project = require('../models/projects');
-let cardState = require('../models/constant');
+let cardState = require('../models/card_state');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
 require('../jobs/slashJob');

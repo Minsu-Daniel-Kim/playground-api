@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 let randomstring = require("randomstring");
-var cardState = require('../models/constant');
+var cardState = require('./card_state');
 
 var cardSchema = new mongoose.Schema({
   id: String,

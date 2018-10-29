@@ -1,5 +1,5 @@
 var Card = require('../models/cards');
-var cardState = require('../models/constant');
+var cardState = require('../models/card_state');
 var agenda = require('./agenda');
 var fsm = require('../tasks/cardstate');
 
