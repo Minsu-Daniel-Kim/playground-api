@@ -213,6 +213,23 @@ router.post('/:id/close-enrollment', function (req, res) {
       console.error(error);
     })
 });
+
+// TODO for development
+router.post('/:id/open-enrollment', function (req, res) {
+  let projectId = req.params.id;
+  Project.findOne({id: projectId})
+    .then(function (project) {
+      if (project === undefined || project === null)
+        notFound(req, res);
+      project.state = "OPEN";
+      project.save();
+      return res.send({message: `Success`})
+    })
+    .catch(function (error) {
+      console.error(error);
+    })
+});
+
 function getOrDefault(value, defaultValue) {
   return value !== undefined ? value : defaultValue;
 }
