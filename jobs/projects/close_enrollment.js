@@ -1,33 +1,27 @@
-const agenda = require('./agenda');
-const mailer = require('./mailer');
-const Project = require('../models/projects');
-const User = require('../models/users');
+const agenda = require('../agenda');
+const mailer = require('../mailer');
+const Project = require('../../models/projects');
+const User = require('../../models/users');
+const common = require('../common');
 
-
-agenda.define('afterProjectStart', (job, done) => {
+agenda.define('closeEnrollment', (job, done) => {
   let projectId = job.attrs.data.projectId;
 
   Project.findOne({id: projectId})
     .then(function (project) {
       let projectName = project.name;
-      let userIds = project.members.map(e => e.userId);
 
       // Send celebrate message to members
-      User.find({id: {$in: userIds}})
-        .then(function (users) {
-          updateEnrollState(users, projectId);
-          users.map(user => mailer.memberSelected(projectName, user));
-        }).catch(function (error) {
-        console.error(error);
+      let userIds = project.students().map(e => e.userId);
+      common.sendNotificationWithCallback(project, userIds, function (users) {
+        updateEnrollState(users, projectId);
+        users.map(user => mailer.memberSelected(projectName, user));
       });
 
       // Send sorry message to candidates
       userIds = project.candidates.map(e => e.userId);
-      User.find({id: {$in: userIds}})
-        .then(function (users) {
-          users.map(user => mailer.memberNotSelected(projectName, user));
-        }).catch(function (error) {
-        console.error(error);
+      common.sendNotificationWithCallback(project, userIds, function (users) {
+        users.map(user => mailer.memberNotSelected(projectName, user));
       });
     })
     .catch(function (err) {

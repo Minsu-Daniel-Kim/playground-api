@@ -3,7 +3,8 @@ let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
 let agenda = require('../jobs/agenda');
-require('../jobs/after_project_start');
+require('../jobs/projects/close_enrollment');
+require('../jobs/projects/start_project');
 
 let express = require('express');
 let router = express.Router();
@@ -201,12 +202,10 @@ router.post('/:id/close-enrollment', function (req, res) {
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
       if (project.state !== "OPEN")
-        return res.state(406).send({message: `Cannot start project with state:${project.state}`});
+        return res.status(406).send({message: `Cannot start project with state:${project.state}`});
 
-      project.state = "RUNNING";
-      project.save();
+      agenda.now('closeEnrollment', {projectId: projectId});
 
-      agenda.now('afterProjectStart', {projectId: projectId});
       return res.send({message: `Success`})
     })
     .catch(function (error) {
@@ -214,15 +213,24 @@ router.post('/:id/close-enrollment', function (req, res) {
     })
 });
 
-// TODO for development
-router.post('/:id/open-enrollment', function (req, res) {
+/**
+ * Project를 open 상태로 변경한다
+ */
+router.post('/:id/publish', function (req, res) {
   let projectId = req.params.id;
   Project.findOne({id: projectId})
     .then(function (project) {
       if (project === undefined || project === null)
         notFound(req, res);
+      if (project.state !== "TEMP")
+        return res.status(406).send({message: `Cannot publish project with state:${project.state}`});
       project.state = "OPEN";
       project.save();
+
+      /** trigger start project */
+      agenda.schedule(project.startAt, 'startProject', {projectId: projectId});
+      // agenda.now('startProject', {projectId: projectId});
+
       return res.send({message: `Success`})
     })
     .catch(function (error) {

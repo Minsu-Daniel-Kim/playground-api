@@ -5,14 +5,12 @@ var schema = new mongoose.Schema({
   name: String,
   description: String,  // description of project
   reputation: Number,
-  createdBy: String,
-  createdDate: Date,
   startAt: Date,
   endAt: Date,
-  history: [],
+  requiredMemberCount: Number,
   members: [{
     userId: String,
-    role: String,       // TODO enum
+    role: String,       // TODO enum: TPM, TA, MEMBER
     staking: Number,
     joinedDate: Date,
   }],
@@ -21,8 +19,10 @@ var schema = new mongoose.Schema({
     staking: Number,
     joinedDate: Date
   }],
-  state: String,        // PREPARE, OPEN, RUNNING, CLOSED
-  private: Boolean      // open <-> private
+  state: String,        // TEMP, OPEN, STARTED, FINISHED
+  private: Boolean,      // open <-> private
+  createdBy: String,
+  createdDate: Date
 });
 
 schema.methods.to_json = function () {
@@ -59,6 +59,10 @@ function findMemberByRole(members, role) {
     return null;
   return member.userId;
 }
+
+schema.methods.students = function () {
+  return this.members.filter(e => e.role === "MEMBER");
+};
 
 schema.methods.apply = function (userId, staking) {
   this.candidates.push({

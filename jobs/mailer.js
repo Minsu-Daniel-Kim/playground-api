@@ -27,6 +27,45 @@ module.exports.memberNotSelected = function (projectName, user) {
   })
 };
 
+/**
+ * Send project started mail to all members
+ * @param projectName
+ * @param user
+ */
+module.exports.projectStarted = function (projectName, user) {
+  sendMail({
+    to: user.email,
+    subject: `Project ${projectName} is just started`,
+    body: `Project ${projectName} is just started! Make your best ${user.nickname}!`
+  })
+};
+
+/**
+ * Send project not started mail to all members
+ * @param projectName
+ * @param user
+ */
+module.exports.projectNotStarted = function (projectName, user) {
+  sendMail({
+    to: user.email,
+    subject: `Project ${projectName} did not started`,
+    body: `Due to lack of member ${projectName} did not started.`
+  })
+};
+
+/**
+ * Send project finished mail to all members
+ * @param projectName
+ * @param user
+ */
+module.exports.projectFinished = function (projectName, user) {
+  sendMail({
+    to: user.email,
+    subject: `Project ${projectName} finished`,
+    body: `Project  ${projectName} is finished.`
+  })
+};
+
 module.exports.cardAssigned = function (card, userId) {
   User.findOne({id: userId})
     .then(function (user) {
