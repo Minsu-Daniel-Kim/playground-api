@@ -12,15 +12,23 @@ agenda.define('afterProjectStart', (job, done) => {
       let projectName = project.name;
       let userIds = project.members.map(e => e.userId);
 
+      // Send celebrate message to members
       User.find({id: {$in: userIds}})
         .then(function (users) {
           updateEnrollState(users, projectId);
-
           users.map(user => mailer.memberSelected(projectName, user));
         }).catch(function (error) {
         console.error(error);
       });
 
+      // Send sorry message to candidates
+      userIds = project.candidates.map(e => e.userId);
+      User.find({id: {$in: userIds}})
+        .then(function (users) {
+          users.map(user => mailer.memberNotSelected(projectName, user));
+        }).catch(function (error) {
+        console.error(error);
+      });
     })
     .catch(function (err) {
       console.error(err)

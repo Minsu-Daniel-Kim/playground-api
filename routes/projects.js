@@ -104,7 +104,7 @@ router.post('/:id/apply', function (req, res, next) {
     // TODO check enrollment is open
     // TODO check staking has same with project's staking amount
 
-    if (project.applied(userId))
+    if (project.applied(userId) || project.enrolled(userId))
       return res.send(400, {message: `Already applied: ${userId}`});
 
     project.apply(userId, staking).save();

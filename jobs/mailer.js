@@ -1,11 +1,29 @@
 let nodeMailer = require('nodemailer');
 let User = require('../models/users');
 
+/**
+ * Send celebrate notification to user
+ * @param projectName
+ * @param user
+ */
 module.exports.memberSelected = function (projectName, user) {
   sendMail({
     to: user.email,
-    subject: `congratulation ${user.nickname}!`,
+    subject: `Congratulation ${user.nickname}!`,
     body: `Congratulation ${user.nickname}! You are now member of ${projectName}! Good luck!`
+  })
+};
+
+/**
+ * Send sorry notification to user
+ * @param projectName
+ * @param user
+ */
+module.exports.memberNotSelected = function (projectName, user) {
+  sendMail({
+    to: user.email,
+    subject: `Sorry ${user.nickname}...`,
+    body: `Unfortunately you did not selected as a member of ${projectName}! Try next time!`
   })
 };
 
