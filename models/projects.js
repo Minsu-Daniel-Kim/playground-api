@@ -21,7 +21,7 @@ var schema = new mongoose.Schema({
     staking: Number,
     joinedDate: Date
   }],
-  state: String,        // editing, OPEN, RUNNING, CLOSED
+  state: String,        // PREPARE, OPEN, RUNNING, CLOSED
   private: Boolean      // open <-> private
 });
 

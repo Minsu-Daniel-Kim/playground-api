@@ -1,6 +1,14 @@
 let nodeMailer = require('nodemailer');
 let User = require('../models/users');
 
+module.exports.memberSelected = function (projectName, user) {
+  sendMail({
+    to: user.email,
+    subject: `congratulation ${user.nickname}!`,
+    body: `Congratulation ${user.nickname}! You are now member of ${projectName}! Good luck!`
+  })
+};
+
 module.exports.cardAssigned = function (card, userId) {
   User.findOne({id: userId})
     .then(function (user) {
@@ -42,7 +50,7 @@ let sendMail = function (params) {
   });
 
   let mailOptions = {
-    from: 'playGround@gmail.com',
+    from: 'PlayGround@gmail.com',
     to: params.to,
     subject: params.subject,
     text: params.body,

@@ -2,14 +2,15 @@ let randomstring = require("randomstring");
 let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
+let agenda = require('../jobs/agenda');
+require('../jobs/after_project_start');
 
 let express = require('express');
 let router = express.Router();
 
 
 function notFound(req, res) {
-  res.statusCode = 400;
-  res.send({message: `Can't find project: ${req.params.id}`})
+  res.status(400).send({message: `Can't find project: ${req.params.id}`})
 }
 
 // api for managing
@@ -125,15 +126,14 @@ router.post('/:id/disjoin', function (req, res) {
   let projectId = req.params.id;
   let userId = req.body.userId;
   if (projectId === undefined || userId === undefined) {
-    return res.send({message: `invalid argument: ${projectId}, ${userId}`})
+    return res.status(406).send({message: `invalid argument: ${projectId}, ${userId}`})
   }
 
   Project.findOne({id: projectId}, function (err, project) {
     if (project === null)
       return res.send(404, {message: `Cant find project: ${projectId}`});
-
-    // TODO check enrollment is open
-
+    if (project.state !== "OPEN")
+      return res.status(406).send({message: `Enrollment is not open!`});
     if (project.applied(userId) !== true)
       return res.send(400, {message: `Not applied: ${userId}`});
 
@@ -174,9 +174,10 @@ router.post('/:id/enroll', function (req, res) {
 });
 
 router.post('/:id/withdraw', function (req, res) {
+  let projectId = req.params.id;
   let targetId = req.body.targetId;
   // TODO check auth
-  Project.findOne({id: req.params.id})
+  Project.findOne({id: projectId})
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
       if (targetId === undefined || targetId === null)
@@ -192,6 +193,26 @@ router.post('/:id/withdraw', function (req, res) {
     })
 });
 
+router.post('/:id/close-enrollment', function (req, res) {
+  let projectId = req.params.id;
+
+  // TODO check auth
+  Project.findOne({id: projectId})
+    .then(function (project) {
+      if (project === undefined || project === null) notFound(req, res);
+      if (project.state !== "OPEN")
+        return res.state(406).send({message: `Cannot start project with state:${project.state}`});
+
+      project.state = "RUNNING";
+      project.save();
+
+      agenda.now('afterProjectStart', {projectId: projectId});
+      return res.send({message: `Success`})
+    })
+    .catch(function (error) {
+      console.error(error);
+    })
+});
 function getOrDefault(value, defaultValue) {
   return value !== undefined ? value : defaultValue;
 }

@@ -16,7 +16,7 @@ let schema = new mongoose.Schema({
     startedDate: Date,
     endedDate: Date,
     staking: Number,
-    status: String
+    state: String //"APPLIED", "DISJOINED", "ENROLLED"
   }],
 });
 
@@ -38,13 +38,13 @@ schema.methods.to_json = function () {
 schema.methods.apply = function (projectId, staking) {
   let project = this.projects.find(e => e.projectId === projectId);
   if (project !== undefined && project !== null) {
-    project.status = "APPLIED";
+    project.state = "APPLIED";
     project.staking = staking;
   } else {
     this.projects.push({
       projectId: projectId,
       staking: staking,
-      status: "APPLIED",
+      state: "APPLIED",
       joinedAt: new Date()
     })
   }
@@ -52,22 +52,23 @@ schema.methods.apply = function (projectId, staking) {
 };
 
 schema.methods.applied = function (projectId) {
-  return this.projects.find(project => project.projectId === projectId).status === "APPLIED";
+  return this.projects.find(project => project.projectId === projectId).state === "APPLIED";
 };
 
 schema.methods.disjoin = function (projectId) {
   let project = this.projects.find(e => e.projectId === projectId);
-  project.status = "DISJOIN";
+  project.state = "DISJOIN";
   return this;
 };
 
 /**
- * project의 enrollmen가 끝나면 user의 상태를 바꾼다
+ * project의 enrollment가 끝나면 user의 상태를 바꾼다
  * @param projectId
  */
 schema.methods.enroll = function (projectId) {
   let project = this.projects.find(e => e.projectId === projectId);
-  project.status = "ENROLLED";
+  project.state = "ENROLLED";
+  return this;
 };
 
 let User = mongoose.model('User', schema);
