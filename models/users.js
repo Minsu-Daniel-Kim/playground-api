@@ -11,18 +11,18 @@ let schema = new mongoose.Schema({
   point: Number,
   role: String,
   projects: [{
-      projectId: String,
-      joinedAt: Date,
-      startedDate: Date,
-      endedDate: Date,
-      staking: Number
-    }
-  ]
+    projectId: String,
+    joinedAt: Date,
+    startedDate: Date,
+    endedDate: Date,
+    staking: Number,
+    status: String
+  }],
 });
 
 schema.methods.to_json = function () {
   return {
-    id : this.id,
+    id: this.id,
     nickname: this.nickname,
     email: this.email,
     accountAddress: this.accountAddress,
@@ -35,16 +35,39 @@ schema.methods.to_json = function () {
   }
 };
 
-schema.methods.enroll = function (projectId, staking) {
-  this.projects.push({
-    projectId: projectId,
-    staking: staking,
-    joinedAt: new Date()
-  })
+schema.methods.apply = function (projectId, staking) {
+  let project = this.projects.find(e => e.projectId === projectId);
+  if (project !== undefined && project !== null) {
+    project.status = "APPLIED";
+    project.staking = staking;
+  } else {
+    this.projects.push({
+      projectId: projectId,
+      staking: staking,
+      status: "APPLIED",
+      joinedAt: new Date()
+    })
+  }
+  return this;
 };
 
-schema.methods.enrolled = function(projectId) {
-  return this.projects.map(project => project.projectId).includes(projectId)
+schema.methods.applied = function (projectId) {
+  return this.projects.find(project => project.projectId === projectId).status === "APPLIED";
+};
+
+schema.methods.disjoin = function (projectId) {
+  let project = this.projects.find(e => e.projectId === projectId);
+  project.status = "DISJOIN";
+  return this;
+};
+
+/**
+ * project의 enrollmen가 끝나면 user의 상태를 바꾼다
+ * @param projectId
+ */
+schema.methods.enroll = function (projectId) {
+  let project = this.projects.find(e => e.projectId === projectId);
+  project.status = "ENROLLED";
 };
 
 let User = mongoose.model('User', schema);

@@ -4,7 +4,6 @@ var schema = new mongoose.Schema({
   id: String,           // projectXXXXXXXX
   name: String,
   description: String,  // description of project
-  permlink: String,
   reputation: Number,
   createdBy: String,
   createdDate: Date,
@@ -13,8 +12,9 @@ var schema = new mongoose.Schema({
   history: [],
   members: [{
     userId: String,
+    role: String,       // TODO enum
+    staking: Number,
     joinedDate: Date,
-    role: String        // TODO enum
   }],
   candidates: [{
     userId: String,
@@ -55,21 +55,54 @@ schema.methods.to_json = function () {
 
 function findMemberByRole(members, role) {
   let member = members.find(member => member.role === role);
-  if (member !== null || member !== undefined)
-    return member.userId;
-  return null;
+  if (member === null || member === undefined)
+    return null;
+  return member.userId;
 }
 
-schema.methods.enroll = function (userId) {
-  return this.members.push({
+schema.methods.apply = function (userId, staking) {
+  this.candidates.push({
     userId: userId,
-    role: 'MEMBER',
+    staking: staking,
     joinedDate: new Date()
-  })
+  });
+  return this;
+};
+
+schema.methods.applied = function (userId) {
+  return this.candidates.map(candidate => candidate.userId).includes(userId);
+};
+
+schema.methods.disjoin = function (userId) {
+  this.candidates = this.candidates.filter(e => e.userId !== userId);
+  return this;
+};
+
+schema.methods.enroll = function (userId) {
+  let candidate = this.candidates.find(e => e.userId === userId);
+  this.candidates = this.candidates.filter(e => e.userId !== userId);
+  this.members.push({
+    userId: userId,
+    role: "MEMBER",
+    staking: candidate.staking,
+    joinedDate: candidate.joinedDate
+  });
+  return this;
 };
 
 schema.methods.enrolled = function (userId) {
-  return this.members.map(member => member.userId).includes(userId)
+  return this.members.map(member => member.userId).includes(userId);
+};
+
+schema.methods.withdraw = function (userId) {
+  let member = this.members.find(e => e.userId === userId);
+  this.members = this.members.filter(member => member.userId !== userId);
+  this.candidates.push({
+    userId: userId,
+    staking: member.staking,
+    joinedDate: member.joinedDate
+  });
+  return this;
 };
 
 schema.methods.hasAuth = function (userId, roles) {

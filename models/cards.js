@@ -1,8 +1,8 @@
-var mongoose = require('mongoose');
-let randomstring = require("randomstring");
-var cardState = require('./card_state');
+let mongoose = require('mongoose');
+let randomString = require("randomstring");
+let CardState = require('./card_state');
 
-var cardSchema = new mongoose.Schema({
+let cardSchema = new mongoose.Schema({
   id: String,
   projectId: String,
   title: String,
@@ -48,16 +48,22 @@ var cardSchema = new mongoose.Schema({
   history: []
 });
 
-function truncate(n, useWordBoundary) {
-  if (this.length <= n) {
-    return this;
-  }
-  var subString = this.substr(0, n - 1);
-  return (useWordBoundary
-    ? subString.substr(0, subString.lastIndexOf(' '))
-    : subString) + "";
-}
+cardSchema.statics.new = function (projectId, userId, title, description) {
+  return new Card({
+    id: "card" + randomString.generate(8),
+    projectId: projectId,
+    title: getOrDefault(title, ''),
+    description: getOrDefault(description, ''),
+    state: CardState.BACKLOG,
+    createdBy: userId,
+    createdDate: new Date()
+  })
+};
 
+/**
+ * List view에서 보여질 정보를 리턴한다
+ * @returns {{id: *, title: *, description: *, state: *, point: *, assigneeId: *}}
+ */
 cardSchema.methods.shorten = function () {
   return {
     id: this.id,
@@ -69,6 +75,20 @@ cardSchema.methods.shorten = function () {
   }
 };
 
+function truncate(n, useWordBoundary) {
+  if (this.length <= n) {
+    return this;
+  }
+  let subString = this.substr(0, n - 1);
+  return (useWordBoundary
+    ? subString.substr(0, subString.lastIndexOf(' '))
+    : subString) + "";
+}
+
+/**
+ * Card Detail view에서 보여질 정보를 리턴한다
+ * @returns
+ */
 cardSchema.methods.detail = function () {
   return {
     id: this.id,
@@ -82,29 +102,27 @@ cardSchema.methods.detail = function () {
     startedDate: this.startedDate,
     dueDate: this.dueDate,
     submissionUrl: this.submissionUrl,
-    comments: this.comments.map(comment => toComment(comment)),
-    // rates: this.rates.map(rate => toRate(rate))
+    comments: toComment.apply(this.comments),
+    // rates: this.rates.map(rate => {
+    //   return {
+    //     userId: rate.userId,
+    //     point: rate.point,
+    //     createdDate: rate.createdDate
+    //   }
+    // })
   }
 };
 
-function toComment(comment) {
+function toComment() {
   return {
-    id: comment.id,
-    parentId: comment.parentId,
-    title: comment.title,
-    content: comment.content,
-    userId: comment.userId,
-    createdDate: comment.createdDate,
-    approved: getOrDefault(comment.approved, false),
-    approver: getOrDefault(comment.approver, null)
-  }
-}
-
-function toRate(rate) {
-  return {
-    userId: rate.userId,
-    point: rate.point,
-    createdDate: rate.createdDate
+    id: this.id,
+    parentId: this.parentId,
+    title: this.title,
+    content: this.content,
+    userId: this.userId,
+    createdDate: this.createdDate,
+    approved: getOrDefault(this.approved, false),
+    approver: getOrDefault(this.approver, null)
   }
 }
 
@@ -131,6 +149,7 @@ cardSchema.methods.all = function () {
   }
 };
 
+// For develop
 cardSchema.methods.clear = function () {
   this.startedDate = null;
   this.dueDate = null;
@@ -139,12 +158,12 @@ cardSchema.methods.clear = function () {
   this.submissionUrl = null;
   this.ttl = -1;
   this.remainPoint = null;
-  this.state = cardState.NOT_STARTED;
+  this.state = CardState.NOT_STARTED;
 };
 
 cardSchema.methods.currentState = function () {
   if (this.state === undefined)
-    this.state = cardState.BACKLOG;
+    this.state = CardState.BACKLOG;
   return this.state
 };
 
@@ -162,7 +181,7 @@ cardSchema.methods.rate = function (userId, point) {
 
 cardSchema.methods.addComment = function (title, content, userId, parentId) {
   this.comments.push({
-    id: "comment" + randomstring.generate(8),
+    id: "comment" + randomString.generate(8),
     parentId: parentId,
     title: title,
     content: content,
