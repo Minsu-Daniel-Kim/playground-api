@@ -1,5 +1,5 @@
 const agenda = require('../agenda');
-const mailer = require('../mailer');
+const mailer = require('../mails/mailer2');
 const Project = require('../../models/projects');
 const User = require('../../models/users');
 const common = require('../common');

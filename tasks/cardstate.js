@@ -1,7 +1,7 @@
 var StateMachine = require('javascript-state-machine');
 var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
-var mailer = require('../jobs/mailer');
+var mailer = require('../jobs/mails/mailer2');
 var agenda = require('../jobs/agenda');
 var moment = require('moment');
 

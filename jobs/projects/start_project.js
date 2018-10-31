@@ -1,12 +1,25 @@
 const agenda = require('../agenda');
-const mailer = require('../mailer');
+const mailer = require('../mails/mailer2');
 const Project = require('../../models/projects');
 const common = require('../common');
 require('./finish_project');
+require('./start_vote_period');
 
 
 function canStart(project) {
   return project.students().length === project.requiredMemberCount;
+}
+
+function scheduleProjectFinish(project) {
+  console.log('scheduleProjectFinish');
+  agenda.schedule(project.endAt, 'finishProject', {projectId: project.id});
+}
+
+function scheduleVotingPeriod(project) {
+  console.log('scheduleVotingPeriod');
+  project.votingPeriods.map(period => {
+    agenda.schedule(period.startAt, 'startVotePeriod', {projectId: project.id});
+  })
 }
 
 agenda.define('startProject', (job, done) => {
@@ -19,18 +32,15 @@ agenda.define('startProject', (job, done) => {
         /** 프로젝트 시작 */
         console.log('canStart');
 
-        project.state = "RUNNING";
-        project.save();
+        project.changeState("RUNNING").save();
         common.sendNotification(project, mailer.projectStarted);
 
-        // schedule project end
-        agenda.schedule(project.endAt, 'finishProject', {projectId: projectId});
-        // TODO schedule voting periods
+        scheduleProjectFinish(project);
+        scheduleVotingPeriod(project);
       } else {
         /** 멤버수가 다 모이지 않으면 FAILED */
         console.log('recruitFailed');
-        project.state = "FAILED";
-        project.save();
+        project.changeState("FAILED").save();
         common.sendNotification(project, mailer.projectNotStarted);
       }
     })

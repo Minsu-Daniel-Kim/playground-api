@@ -224,12 +224,11 @@ router.post('/:id/publish', function (req, res) {
         notFound(req, res);
       if (project.state !== "TEMP")
         return res.status(406).send({message: `Cannot publish project with state:${project.state}`});
-      project.state = "OPEN";
-      project.save();
+
+      project.changeState("OPEN").save();
 
       /** trigger start project */
       agenda.schedule(project.startAt, 'startProject', {projectId: projectId});
-      // agenda.now('startProject', {projectId: projectId});
 
       return res.send({message: `Success`})
     })

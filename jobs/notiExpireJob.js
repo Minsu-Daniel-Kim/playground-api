@@ -1,7 +1,7 @@
 var Card = require('../models/cards');
 var cardState = require('../models/card_state');
 var agenda = require('./agenda');
-var mailer = require('./mailer');
+var mailer = require('./mails/mailer2');
 
 agenda.define('notiExpiration', (job, done) => {
   let cardId = job.attrs.data.cardId;

@@ -21,6 +21,14 @@ var schema = new mongoose.Schema({
   }],
   state: String,        // TEMP, OPEN, STARTED, FINISHED
   private: Boolean,      // open <-> private
+  sprintCount: Number,
+  // TODO voting period는 프로젝트 생성시 지정된다
+  votingPeriods:
+    [{
+      cardCount:Number,
+      startAt: Date,
+      endAt: Date
+    }],
   createdBy: String,
   createdDate: Date
 });
@@ -112,6 +120,11 @@ schema.methods.withdraw = function (userId) {
 schema.methods.hasAuth = function (userId, roles) {
   let member = this.members.find(member => member.userId === userId);
   return member !== undefined && roles.includes(member.role);
+};
+
+schema.methods.changeState = function (nextState) {
+  this.state = nextState;
+  return this;
 };
 
 let Project = mongoose.model('Project', schema);

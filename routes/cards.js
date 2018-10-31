@@ -62,7 +62,7 @@ router.post('/:id/comments/:commentId/cancel-approve', function (req, res, next)
 });
 
 
-// WARN: For development
+/** WARN: For development */
 router.post('/:id/reset', function (req, res, next) {
   return cardModule.reset(req, res);
 });

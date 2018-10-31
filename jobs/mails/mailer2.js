@@ -1,5 +1,4 @@
-let nodeMailer = require('nodemailer');
-let User = require('../models/users');
+let User = require('../../models/users');
 
 /**
  * Send celebrate notification to user

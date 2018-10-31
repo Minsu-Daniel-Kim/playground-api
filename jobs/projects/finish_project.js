@@ -1,5 +1,5 @@
 const agenda = require('../agenda');
-const mailer = require('../mailer');
+const mailer = require('../mails/mailer2');
 const common = require('../common');
 const Project = require('../../models/projects');
 
@@ -10,13 +10,11 @@ agenda.define('finishProject', (job, done) => {
 
   Project.findOne({id: projectId})
     .then(function (project) {
-      project.state = "FINISHED";
-      project.save();
+      project.changeState("FINISHED").save();
+      common.sendNotification(project, mailer.projectFinished);
 
       // TODO point 정산
       // TODO staking 정산
-
-      common.sendNotification(project, mailer.projectFinished);
     })
     .catch(function (err) {
       console.error(err)
