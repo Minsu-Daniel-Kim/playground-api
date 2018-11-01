@@ -52,7 +52,8 @@ schema.methods.apply = function (projectId, staking) {
 };
 
 schema.methods.applied = function (projectId) {
-  return this.projects.find(project => project.projectId === projectId).state === "APPLIED";
+  let project = this.projects.find(project => project.projectId === projectId);
+  return project !== undefined && project !== null && project.state === "APPLIED";
 };
 
 schema.methods.disjoin = function (projectId) {

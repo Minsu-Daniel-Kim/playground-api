@@ -167,6 +167,11 @@ cardSchema.methods.currentState = function () {
   return this.state
 };
 
+cardSchema.methods.updateState = function (state) {
+  this.state = state;
+  return this;
+};
+
 cardSchema.methods.hasRated = function (userId) {
   return this.rates.map(rate => rate.userId).includes(userId)
 };

@@ -1,9 +1,11 @@
 var StateMachine = require('javascript-state-machine');
+var moment = require('moment');
+
 var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
 var mailer = require('../jobs/mails/mailer2');
 var agenda = require('../jobs/agenda');
-var moment = require('moment');
+
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 
@@ -14,7 +16,7 @@ let fsm = new StateMachine({
     {name: 'assigned', from: CardState.NOT_STARTED, to: CardState.IN_PROGRESS},
     {name: 'submitted', from: CardState.IN_PROGRESS, to: CardState.IN_REVIEW},
     {name: 'accepted', from: CardState.IN_REVIEW, to: CardState.COMPLETE},
-    {name: 'rejected', from: CardState.IN_REVIEW, to: CardState.IN_PROGRESS},
+    {name: 'rejected', from: CardState.IN_REVIEW, to: CardState.NOT_STARTED},
     {name: 'gaveup', from: CardState.IN_PROGRESS, to: CardState.NOT_STARTED},
     {name: 'timesup', from: CardState.IN_PROGRESS, to: CardState.BACKLOG},
     {
@@ -59,9 +61,6 @@ let fsm = new StateMachine({
     },
     onAccepted: function (lifecycle, card, params) {
       console.log('onAccepted');
-      // TODO card point는 vote 기반으로 계산되어야 함
-      card.gained = card.point;
-
       PointPool.findOne({projectId: card.projectId, userId: card.assigneeId})
         .then(pointPool => addPoint(pointPool, card))
         .catch(function (e) {
@@ -70,25 +69,30 @@ let fsm = new StateMachine({
     },
     onRejected: function (lifecycle, card, params) {
       console.log('onRejected');
-      // TODO start countdown again
+      // TODO staking 차감
     },
     onGaveup: function (lifecycle, card, params) {
       console.log('onGaveup');
-      card.clear()
+      // TODO 남은 staking 반환
+      // card.clear()
     },
     onTimesup: function (lifecycle, card, params) {
       console.log('onTimesup');
-      card.clear()
+      // TODO staking 차감
+      // card.clear()
     }
   }
 });
+
+const CARD_TYPE = "CARD";
+const DEFAULT_MODIFIER = "SYSTEM";
 
 function addPoint(pointPool, card) {
   return new Promise((resolve, reject) => {
     if (pointPool === undefined || pointPool === null)
       pointPool = PointPool.new(card.projectId, card.assigneeId);
 
-    pointPool.gained(card.id, card.gained, "CARD", "Card accepted", "SYSTEM");
+    pointPool.add(card.id, card.gained, CARD_TYPE, "Card accepted", DEFAULT_MODIFIER);
     pointPool.save(function (err, saved) {
       if (err) reject();
       resolve(pointPool)

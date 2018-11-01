@@ -1,3 +1,5 @@
+let nodeMailer = require('nodemailer');
+
 let User = require('../../models/users');
 
 /**

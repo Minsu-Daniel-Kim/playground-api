@@ -2,8 +2,8 @@ const agenda = require('../agenda');
 const mailer = require('../mails/mailer2');
 const Project = require('../../models/projects');
 const common = require('../common');
-require('./finish_project');
-require('./start_vote_period');
+require('./project_finish');
+require('./vote_period_start');
 
 
 function canStart(project) {

@@ -3,8 +3,8 @@ let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
 let agenda = require('../jobs/agenda');
-require('../jobs/projects/close_enrollment');
-require('../jobs/projects/start_project');
+require('../jobs/projects/enrollment_close');
+require('../jobs/projects/project_start');
 
 let express = require('express');
 let router = express.Router();
@@ -31,12 +31,17 @@ router.get('/:id', function (req, res, next) {
 });
 
 router.get('/:id/cards', function (req, res, next) {
-  Card.find({projectId: req.params.id}, function (err, cards) {
-    if (err) return console.error(err);
-    if (cards !== null)
+  let projectId = req.params.id;
+  Card.find({projectId: projectId})
+    .then(function (cards) {
+      if (cards === null)
+        return res.send({message: `Can't find cards by: ${projectId}`});
       return res.send(cards.map(card => card.shorten()));
-    return res.send({message: `Can't find cards by: ${req.params.id}`});
-  });
+    })
+    .catch(function (error) {
+      console.error(error);
+      res.status(500).send({message: "Something went wrong"});
+    });
 });
 
 // project에 카드를 생성한다
