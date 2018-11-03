@@ -125,10 +125,9 @@ router.post('/:id/apply', function (req, res, next) {
       user.apply(projectId, staking).save();
       return res.send({message: `Success to apply`})
     });
-  });
 });
 
-router.post('/:id/disjoin', function (req, res) {
+router.post('/:id/withdraw', function (req, res) {
   let projectId = req.params.id;
   let userId = req.body.userId;
   if (projectId === undefined || userId === undefined) {
@@ -157,9 +156,9 @@ router.post('/:id/disjoin', function (req, res) {
   })
 });
 
-router.post('/:id/enroll', function (req, res) {
+router.post('/:id/approve', function (req, res) {
   let projectId = req.params.id;
-  let candidate = req.body.targetId;
+  let candidate = req.body.candidateId;
   let userId = req.body.userId;
   // TODO check auth
   Project.findOne({id: projectId})
@@ -179,20 +178,21 @@ router.post('/:id/enroll', function (req, res) {
     })
 });
 
-router.post('/:id/withdraw', function (req, res) {
+router.post('/:id/disapproval', function (req, res) {
   let projectId = req.params.id;
-  let targetId = req.body.targetId;
+  let candidate = req.body.candidateId;
+  let userId = req.body.userId;
   // TODO check auth
   Project.findOne({id: projectId})
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
-      if (targetId === undefined || targetId === null)
+      if (candidate === undefined || candidate === null)
         return res.send(406, {message: 'target id is empty'});
-      if (project.enrolled(targetId) !== true)
-        return res.send(406, {message: `user id ${targetId} is not a member of project ${project.id}`});
+      if (project.enrolled(candidate) !== true)
+        return res.send(406, {message: `user id ${candidate} is not a member of project ${project.id}`});
 
-      project.withdraw(targetId).save();
-      return res.send({message: `Success to withdraw member: ${targetId}`})
+      project.withdraw(candidate).save();
+      return res.send({message: `Success to withdraw member: ${candidate}`})
     })
     .catch(function (error) {
       console.error(error);
