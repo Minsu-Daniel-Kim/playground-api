@@ -7,6 +7,7 @@ var schema = new mongoose.Schema({
   reputation: Number,
   startAt: Date,
   endAt: Date,
+  stakingAmount: Number,
   requiredMemberCount: Number,
   members: [{
     userId: String,
@@ -39,7 +40,7 @@ schema.methods.to_json = function () {
     name: this.name,
     description: this.description,
     reputation: this.reputation,
-    createdDate: this.createdDate,
+    stakingAmount:this.stakingAmount,
     startAt: this.startAt,
     endAt: this.endAt,
     owner: this.createdBy,
@@ -58,6 +59,7 @@ schema.methods.to_json = function () {
         joinedAt: candidate.joinedDate
       }
     }),
+    createdDate: this.createdDate,
   }
 };
 
@@ -85,12 +87,17 @@ schema.methods.applied = function (userId) {
   return this.candidates.map(candidate => candidate.userId).includes(userId);
 };
 
-schema.methods.disjoin = function (userId) {
+schema.methods.withdraw = function (userId) {
   this.candidates = this.candidates.filter(e => e.userId !== userId);
   return this;
 };
 
-schema.methods.enroll = function (userId) {
+/**
+ * TPM이 candidate를 멤버로 지정한다
+ * @param userId
+ * @returns {mongoose.Schema.methods}
+ */
+schema.methods.approve = function (userId) {
   let candidate = this.candidates.find(e => e.userId === userId);
   this.candidates = this.candidates.filter(e => e.userId !== userId);
   this.members.push({
@@ -106,14 +113,19 @@ schema.methods.enrolled = function (userId) {
   return this.members.map(member => member.userId).includes(userId);
 };
 
-schema.methods.withdraw = function (userId) {
+/**
+ * TPM이 멤버를 candidate로 변경한다. 
+ * @param userId
+ * @returns {mongoose.Schema.methods}
+ */
+schema.methods.disapprove = function (userId) {
   let member = this.members.find(e => e.userId === userId);
-  this.members = this.members.filter(member => member.userId !== userId);
   this.candidates.push({
     userId: userId,
     staking: member.staking,
     joinedDate: member.joinedDate
   });
+  this.members = this.members.filter(member => member.userId !== userId);
   return this;
 };
 

@@ -97,14 +97,6 @@ cards.submit = function (req, res, next) {
   return updateCardState(req, res, 'submitted', isAssignee)
 };
 
-cards.accept = function (req, res, next) {
-  return updateCardState(req, res, 'accepted', isMentor)
-};
-
-cards.reject = function (req, res, next) {
-  return updateCardState(req, res, 'rejected', isMentor);
-};
-
 function updateCardState(req, res, action, checkAuth) {
   Card.findOne({id: req.params.id})
     .then(card => exist(card, req.params.id))

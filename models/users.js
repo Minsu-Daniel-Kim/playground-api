@@ -16,7 +16,7 @@ let schema = new mongoose.Schema({
     startedDate: Date,
     endedDate: Date,
     staking: Number,
-    state: String //"APPLIED", "DISJOINED", "ENROLLED"
+    state: String //"APPLIED", "WITHDRAW", "APPROVED
   }],
 });
 
@@ -56,9 +56,9 @@ schema.methods.applied = function (projectId) {
   return project !== undefined && project !== null && project.state === "APPLIED";
 };
 
-schema.methods.disjoin = function (projectId) {
+schema.methods.withdraw = function (projectId) {
   let project = this.projects.find(e => e.projectId === projectId);
-  project.state = "DISJOIN";
+  project.state = "WITHDRAW";
   return this;
 };
 
@@ -68,7 +68,7 @@ schema.methods.disjoin = function (projectId) {
  */
 schema.methods.enroll = function (projectId) {
   let project = this.projects.find(e => e.projectId === projectId);
-  project.state = "ENROLLED";
+  project.state = "APPROVED";
   return this;
 };
 

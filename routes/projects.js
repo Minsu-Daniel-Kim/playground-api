@@ -2,6 +2,8 @@ let randomstring = require("randomstring");
 let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
+let StakingPool = require('../models/stakings');
+
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
 require('../jobs/projects/project_start');
@@ -44,31 +46,40 @@ router.get('/:id/cards', function (req, res, next) {
     });
 });
 
-// project에 카드를 생성한다
+//
+/**
+ * Project에 카드를 생성한다
+ * TPM, TA, MEMBER 모두 생성가능
+ */
 router.post('/:id/card', function (req, res, next) {
-  if (req.body.userId === undefined || req.body.userId === null) {
+  let projectId = req.params.id;
+  let userId = req.body.userId;
+  if (userId === undefined || userId === null) {
     return res.send(400, {message: "no userId"});
   }
 
-  Project.findOne({id: req.params.id}, function (err, project) {
-    if (err) return console.error(err);
-    if (project === null) return notFound(req, res);
-
-    Card.new({
-      id: "card" + randomstring.generate(8),
-      projectId: req.params.id,
-      title: getOrDefault(req.body.title, ''),
-      description: getOrDefault(req.body.description, ''),
-      createdDate: new Date(),
-      createdBy: req.body.userId,
-      state: CardState.BACKLOG,
-      history: [],
-      comments: []
-    }).save(function (err, saved) {
-      if (err) return res.send(err);
-      return res.send({message: "success to register card"});
+  Project.findOne({id: req.params.id})
+    .then(function (project) {
+      if (project === null) return notFound(req, res);
+      Card.new({
+        id: "card" + randomstring.generate(8),
+        projectId: projectId,
+        title: getOrDefault(req.body.title, ''),
+        description: getOrDefault(req.body.description, ''),
+        createdDate: new Date(),
+        createdBy: userId,
+        state: CardState.BACKLOG,
+        history: [],
+        comments: []
+      }).save(function (err, saved) {
+        if (err) return res.send(err);
+        return res.send({message: "success to register card"});
+      });
+    })
+    .catch(function (error) {
+      console.error(error);
+      res.status(500).send({message: 'Something went wrong'})
     });
-  });
 });
 
 router.get('/:id/candidates', function (req, res) {
@@ -103,27 +114,45 @@ router.post('/:id/apply', function (req, res, next) {
     return res.send({message: `invalid argument: ${projectId}, ${userId}, ${staking}`})
   }
 
-  Project.findOne({id: projectId}, function (err, project) {
-    if (project === null)
-      return res.send(404, {message: `Cant find project: ${projectId}`});
+  Project.findOne({id: projectId})
+    .then(function (project) {
+      if (project === null)
+        return res.send(404, {message: `Cant find project: ${projectId}`});
+      if (project.state !== "OPEN")
+        return res.status(406).send({message: `Enrollment is not open!`});
+      if (project.applied(userId) || project.enrolled(userId))
+        return res.send(400, {message: `Already applied: ${userId}`});
+      if (staking !== project.stakingAmount)
+        return res.send(406, {message: `Invalid staking amount. need: ${project.stakingAmount} given:${staking} `});
 
-    // TODO check enrollment is open
-    // TODO check staking has same with project's staking amount
+      project.apply(userId, staking).save();
 
-    if (project.applied(userId) || project.enrolled(userId))
-      return res.send(400, {message: `Already applied: ${userId}`});
+      // TODO project와 user 둘 다 저장이 성공해야함
+      User.findOne({id: userId})
+        .then(function (user) {
+          if (user === null)
+            return res.status(404).send({message: `Cant find user: ${userId}`});
+          if (user.applied(projectId))
+            return res.status(406).send({message: `Already enrolled: ${projectId}`});
 
-    project.apply(userId, staking).save();
-
-    // TODO project와 user 둘 다 저장이 성공해야함
-    User.findOne({id: userId}, function (err, user) {
-      if (user === null)
-        return res.status(404,).send({message: `Cant find user: ${userId}`});
-      if (user.applied(projectId))
-        return res.send(400, {message: `Already enrolled: ${projectId}`});
-
-      user.apply(projectId, staking).save();
-      return res.send({message: `Success to apply`})
+          user.apply(projectId, staking).save();
+          // staking
+          StakingPool.findOne({userId: userId})
+            .then(pool => pool.log(projectId, projectId, staking, "ENROLL", ""))
+            .then(pool => pool.save())
+            .catch(function (e) {
+              console.error(e);
+            });
+          return res.send({message: `Success to apply`})
+        })
+        .catch(function (error) {
+          // TODO rollback
+          console.error(error);
+        });
+    })
+    .catch(function (error) {
+      console.error(error);
+      return res.status(500).send({message: 'Something went wrong'});
     });
 });
 
@@ -142,7 +171,7 @@ router.post('/:id/withdraw', function (req, res) {
     if (project.applied(userId) !== true)
       return res.send(400, {message: `Not applied: ${userId}`});
 
-    project.disjoin(userId).save();
+    project.withdraw(userId).save();
 
     User.findOne({id: userId}, function (err, user) {
       if (user === null)
@@ -150,8 +179,16 @@ router.post('/:id/withdraw', function (req, res) {
       if (user.applied(projectId) !== true)
         return res.status(400).send({message: `Not applied: ${projectId}`});
 
-      user.disjoin(projectId).save();
-      return res.send({message: `Success to disjoin project`})
+      user.withdraw(projectId).save();
+
+      // return staking
+      StakingPool.findOne({userId: userId})
+        .then(pool => pool.log(projectId, projectId, project.staking * -1, "WITHDRAW", ""))
+        .then(pool => pool.save())
+        .catch(function (e) {
+          console.error(e);
+        });
+      return res.send({message: `Success to withdraw project`})
     });
   })
 });
@@ -170,7 +207,7 @@ router.post('/:id/approve', function (req, res) {
       if (project.applied(candidate) !== true)
         return res.send(406, {message: `user id ${candidate} is not a candidate of project ${project.id}`});
 
-      project.enroll(candidate).save();
+      project.approve(candidate).save();
       return res.send({message: "Success to select member"});
     })
     .catch(function (error) {
@@ -178,7 +215,7 @@ router.post('/:id/approve', function (req, res) {
     })
 });
 
-router.post('/:id/disapproval', function (req, res) {
+router.post('/:id/disapprove', function (req, res) {
   let projectId = req.params.id;
   let candidate = req.body.candidateId;
   let userId = req.body.userId;
@@ -191,7 +228,7 @@ router.post('/:id/disapproval', function (req, res) {
       if (project.enrolled(candidate) !== true)
         return res.send(406, {message: `user id ${candidate} is not a member of project ${project.id}`});
 
-      project.withdraw(candidate).save();
+      project.disapprove(candidate).save();
       return res.send({message: `Success to withdraw member: ${candidate}`})
     })
     .catch(function (error) {

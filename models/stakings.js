@@ -1,6 +1,8 @@
 let mongoose = require('mongoose');
 let randomString = require("randomstring");
 
+// TODO staking과 tokens 분리
+// Project apply, end시에만 쌓이는 기록
 let schema = new mongoose.Schema({
   id: String,
   userId: String,
@@ -38,11 +40,12 @@ schema.methods.log = function (id, projectId, amount, type, reason) {
   this.histories.push({
     sourceId: id,
     projectId: projectId,
-    type: type, // SLASH,
+    type: type, // ENROLL, CARD_ASSIGN, SLASH, TIME_OUT
     desc: reason,
-    point: amount,
+    amount: amount,
     createdAt: new Date()
   });
+  return this;
 };
 
 let Staking = mongoose.model('Staking', schema);

@@ -37,7 +37,7 @@ schema.statics.new = function (projectId, userId, giver) {
   })
 };
 
-schema.methods.gained = function (id, point, type, reason) {
+schema.methods.add = function (id, point, type, reason) {
   this.totalPoint += point;
   this.histories.push({
     sourceId: id,

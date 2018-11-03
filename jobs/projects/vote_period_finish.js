@@ -7,7 +7,11 @@ const VotingPeriodMailer = require('../mails/vote_period_finished_mailer');
 const Project = require('../../models/projects');
 const Card = require('../../models/cards');
 const CardState = require('../../models/card_state');
+const StakingPool = require('../../models/stakings');
 
+
+/** const value */
+const BOUNDARY_SCORE = 6;
 
 function getAveragePoint(rates) {
   let sum = rates.map(rate => rate.point).reduce((total, num) => {
@@ -27,17 +31,24 @@ function updateState(card, action) {
   card.updateState(fsm.state).save();
 }
 
+function transfer(card, amount, type, reason) {
+  StakingPool.findOne({userId: card.assigneeId})
+    .then(pool => pool.log(card.id, card.projectId, amount, type, reason))
+    .then(pool => pool.save())
+    .catch(function (e) {
+      console.error(e);
+    });
+}
+
 function accept(card) {
-  let action = 'accepted';
-  updateState(card, action)
+  updateState(card, 'accepted');
+  transfer(card, card.remainPoint, "ACCEPTED", "card is accepted");
 }
 
 function reject(card) {
-  let action = 'rejected';
-  updateState(card, action)
+  updateState(card, 'rejected');
+  transfer(card, -1 * card.remainPoint, "REJECTED", "card is rejected");
 }
-
-const BOUNDARY_SCORE = 6;
 
 function acceptOrReject(card) {
   card.gained >= BOUNDARY_SCORE ? accept(card) : reject(card);
@@ -58,7 +69,6 @@ agenda.define('finishVotePeriod', (job, done) => {
             card.gained = getAveragePoint(card.rates);
             // 3. change state to accept or reject
             acceptOrReject(card);
-
           });
         })
         .catch(function (error) {

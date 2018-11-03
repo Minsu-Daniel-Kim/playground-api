@@ -25,11 +25,11 @@ let cardSchema = new mongoose.Schema({
   ttl: Number,            // card countdown time
   point: Number,          // maximum possible gain point
   gained: Number,         // actually gained point
-  remainPoint: Number,    // how much assignee can gain
 
   // Assignee
-  assigneeId: String,       // assignee id
+  assigneeId: String,     // assignee id
   staking: Number,        // how much assignee staked
+  remainPoint: Number,  // how much assignee can gain
   submissionUrl: String,  // jupyter notebook address
 
   // meta information
@@ -164,7 +164,7 @@ cardSchema.methods.clear = function () {
 cardSchema.methods.currentState = function () {
   if (this.state === undefined)
     this.state = CardState.BACKLOG;
-  return this.state
+  return this.state;
 };
 
 cardSchema.methods.updateState = function (state) {
@@ -173,7 +173,7 @@ cardSchema.methods.updateState = function (state) {
 };
 
 cardSchema.methods.hasRated = function (userId) {
-  return this.rates.map(rate => rate.userId).includes(userId)
+  return this.rates.map(rate => rate.userId).includes(userId);
 };
 
 cardSchema.methods.rate = function (userId, point) {

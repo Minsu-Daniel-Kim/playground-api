@@ -36,15 +36,6 @@ router.post('/:id/submit', function (req, res, next) {
   return cardModule.submit(req, res);
 });
 
-// TODO delete this
-router.post('/:id/accept', function (req, res, next) {
-  return cardModule.accept(req, res);
-});
-
-router.post('/:id/reject', function (req, res, next) {
-  return cardModule.reject(req, res);
-});
-
 router.post('/:id/comment', function (req, res, next) {
   return cardModule.comment(req, res);
 });
