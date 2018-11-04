@@ -32,12 +32,12 @@ function updateState(card, action) {
 }
 
 function transfer(card, amount, type, reason) {
-  StakingPool.findOne({userId: card.assigneeId})
-    .then(pool => pool.log(card.id, card.projectId, amount, type, reason))
-    .then(pool => pool.save())
-    .catch(function (e) {
-      console.error(e);
-    });
+  // TODO add/sub tokens to user
+  // StakingPool.findOne({userId: card.assigneeId})
+  //   .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
+  //   .catch(function (e) {
+  //     console.error(e);
+  //   });
 }
 
 function accept(card) {
@@ -51,6 +51,7 @@ function reject(card) {
 }
 
 function acceptOrReject(card) {
+  card.gained = getAveragePoint(card.rates);
   card.gained >= BOUNDARY_SCORE ? accept(card) : reject(card);
 }
 
@@ -60,22 +61,18 @@ agenda.define('finishVotePeriod', (job, done) => {
 
   Project.findOne({id: projectId})
     .then(function (project) {
-      // 1. find in review cards
+      // find in review cards
       Card.find({projectId: project.id, state: CardState.IN_PROGRESS})
         .then(function (cards) {
           if (cards === null) return;
           cards.map(card => {
-            // 2. calculate each point of them
-            card.gained = getAveragePoint(card.rates);
-            // 3. change state to accept or reject
             acceptOrReject(card);
           });
         })
         .catch(function (error) {
           console.error(error);
         });
-      // 5. add/sub staking to user
-      // 6. send mail
+      // send mail
       common.sendNotification(project, VotingPeriodMailer.send);
     })
     .catch(function (err) {

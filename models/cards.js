@@ -149,7 +149,9 @@ cardSchema.methods.all = function () {
   }
 };
 
-// For develop
+/**
+ * TODO history에 지난 기록 남기기
+ */
 cardSchema.methods.clear = function () {
   this.startedDate = null;
   this.dueDate = null;

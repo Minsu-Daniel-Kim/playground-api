@@ -71,16 +71,17 @@ let fsm = new StateMachine({
     onRejected: function (lifecycle, card, params) {
       console.log('onRejected');
       // TODO staking 차감
+      card.clear();
     },
     onGaveup: function (lifecycle, card, params) {
       console.log('onGaveup');
       // TODO 남은 staking 반환
-      // card.clear()
+      card.clear()
     },
     onTimesup: function (lifecycle, card, params) {
       console.log('onTimesup');
       // TODO staking 차감
-      // card.clear()
+      card.clear()
     }
   }
 });
