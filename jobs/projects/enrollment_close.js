@@ -16,14 +16,10 @@ function bulkUpdateOp(user, projectId) {
   }
 }
 
-function bulkUpdateCallback(result) {
-  console.log(result);
-}
-
 function updateEnrollState(users, projectId) {
   let bulkOps = users.map(user => bulkUpdateOp(user, projectId));
   User.bulkWrite(bulkOps)
-    .then(bulkUpdateCallback)
+    .then(result => console.log(result)) // TODO
     .catch(function (error) {
       console.error(error);
     });
@@ -32,11 +28,9 @@ function updateEnrollState(users, projectId) {
 function returnStaking(userId, projectId, project) {
   StakingPool.findOne({userId: userId})
     .then(pool => {
-      if (pool === undefined || pool === null) {
-        console.error(`Staking pool is not exist of ${userId} in ${projectId}`);
-        return;
-      }
-      pool.log(projectId, projectId, project.staking * -1, "WITHDRAW", "").save()
+      if (pool === null)
+        return console.error(`Staking pool is not exist of ${userId} in ${projectId}`);
+      pool.log(projectId, project.stakingAmount * -1, "WITHDRAW", "").save()
     })
     .catch(function (e) {
       console.error(e);
