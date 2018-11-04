@@ -177,6 +177,21 @@ cards.reset = function (req, res, next) {
     });
 };
 
+cards.resetAll = function (req, res, next) {
+  Card.find({state: cardState.BACKLOG})
+    .then(function (cards) {
+      cards.map(card => {
+        card.clear();
+        card.save()
+      });
+      return res.send({message: `reset ${cards.length} cards`})
+    })
+    .catch(function (err) {
+      console.error(err);
+      return res.send({message: err});
+    });
+};
+
 /**
  * Add comment
  */

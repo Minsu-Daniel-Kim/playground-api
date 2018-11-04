@@ -62,4 +62,8 @@ router.post('/:id/reset', function (req, res, next) {
   return cardModule.reset(req, res);
 });
 
+router.post('/reset', function (req, res, next) {
+  return cardModule.resetAll(req, res);
+});
+
 module.exports = router;
