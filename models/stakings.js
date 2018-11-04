@@ -9,12 +9,12 @@ let schema = new mongoose.Schema({
   totalAmount: Number,
   histories: [
     {
-      sourceId: String,
-      projectId: String,
-      type: String,
-      desc: String,
-      amount: Number,
-      createdAt: Date
+      // sourceId: String,
+      // projectId: String,
+      // type: String,
+      // desc: String,
+      // amount: Number,
+      // createdAt: Date
     }
   ],
   createdBy: String,
@@ -22,12 +22,11 @@ let schema = new mongoose.Schema({
   modifiedAt: Date
 });
 
-schema.statics.new = function (projectId, userId) {
+schema.statics.new = function (userId) {
   return new Staking({
     id: "staking" + randomString.generate(8),
-    projectId: projectId,
     userId: userId,
-    staking: 0,
+    totalAmount: 0,
     histories: [],
     createdBy: "SYSTEM",
     createdAt: new Date(),
@@ -35,12 +34,11 @@ schema.statics.new = function (projectId, userId) {
   })
 };
 
-schema.methods.log = function (id, projectId, amount, type, reason) {
-  this.staking += amount;
+schema.methods.log = function (projectId, amount, type, reason) {
+  this.totalAmount += amount;
   this.histories.push({
-    sourceId: id,
     projectId: projectId,
-    type: type, // ENROLL, CARD_ASSIGN, SLASH, TIME_OUT
+    type: type, // ENROLL,
     desc: reason,
     amount: amount,
     createdAt: new Date()

@@ -138,10 +138,14 @@ router.post('/:id/apply', function (req, res, next) {
           user.apply(projectId, staking).save();
           // staking
           StakingPool.findOne({userId: userId})
-            .then(pool => pool.log(projectId, projectId, staking, "ENROLL", ""))
-            .then(pool => pool.save())
+            .then(pool => {
+              if (pool === null)
+                pool = StakingPool.new(userId);
+              pool.log(projectId, staking, "ENROLL", "").save()
+            })
             .catch(function (e) {
               console.error(e);
+              return res.status(500).send({message: 'Something went wrong'});
             });
           return res.send({message: `Success to apply`})
         })
@@ -184,7 +188,7 @@ router.post('/:id/withdraw', function (req, res) {
       // return staking
       StakingPool.findOne({userId: userId})
         .then(pool => {
-          pool.log(projectId, projectId, project.stakingAmount * -1, "WITHDRAW", "").save();
+          pool.log(projectId, /*TODO*/project.stakingAmount * -1, "WITHDRAW", "").save();
           return res.send({message: `Success to withdraw project`})
         })
         .catch(function (e) {
