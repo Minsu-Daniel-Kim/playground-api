@@ -70,7 +70,7 @@ cardSchema.methods.shorten = function () {
     title: this.title,
     description: truncate.apply(this.description, [100, true]),
     state: this.state,
-    label: this.point,
+    label: this.point.toString(),
     assigneeId: this.assigneeId
   }
 };
@@ -96,7 +96,7 @@ cardSchema.methods.detail = function () {
     description: this.description,
     state: this.state,
     assigneeId: this.assigneeId,
-    label: this.point,
+    label: this.point.toString(),
     remainPoint: this.remainPoint,
     ttl: this.ttl,
     startedDate: this.startedDate,

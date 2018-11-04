@@ -183,12 +183,14 @@ router.post('/:id/withdraw', function (req, res) {
 
       // return staking
       StakingPool.findOne({userId: userId})
-        .then(pool => pool.log(projectId, projectId, project.staking * -1, "WITHDRAW", ""))
-        .then(pool => pool.save())
+        .then(pool => {
+          pool.log(projectId, projectId, project.stakingAmount * -1, "WITHDRAW", "").save();
+          return res.send({message: `Success to withdraw project`})
+        })
         .catch(function (e) {
           console.error(e);
+          return res.send(500, {message: `Something went wrong`});
         });
-      return res.send({message: `Success to withdraw project`})
     });
   })
 });
@@ -219,6 +221,7 @@ router.post('/:id/disapprove', function (req, res) {
   let projectId = req.params.id;
   let candidate = req.body.candidateId;
   let userId = req.body.userId;
+
   // TODO check auth
   Project.findOne({id: projectId})
     .then(function (project) {

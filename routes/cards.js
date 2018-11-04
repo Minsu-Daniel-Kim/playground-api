@@ -20,6 +20,10 @@ router.get('/:id/detail', function (req, res, next) {
   return cardModule.detail(req, res);
 });
 
+router.post('/:id/update', function (req, res) {
+  return cardModule.update(req, res);
+});
+
 router.post('/:id/ready', function (req, res, next) {
   return cardModule.ready(req, res);
 });

@@ -28,10 +28,11 @@ let fsm = new StateMachine({
   methods: {
     onReady: function (lifecycle, card, params) {
       console.log('onReady');
+      console.log(params.point );
       if (params.point === undefined || params.point < 0)
         return false;
       card.point = params.point;
-      card.timeLimit = card.point * _MS_PER_DAY
+      // card.timeLimit = card.point * _MS_PER_DAY
     },
     onAssigned: function (lifecycle, card, params) {
       console.log('onAssigned');

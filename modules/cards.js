@@ -45,14 +45,47 @@ cards.detail = function (req, res) {
     });
 };
 
+cards.update = function (req, res) {
+  let userId = req.body.userId;
+  let cardId = req.params.id;
+  let title = req.body.title;
+  let desc = req.body.description;
+
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    .then(card => isMember(card, userId))
+    .then(function (card) {
+      if (isNotEmpty(title))
+        card.title = title;
+      if (isNotEmpty(desc))
+        card.description = desc;
+
+      // TODO: point 변경시 이미 assign된 경우는 처리가 어려우므로 일단 제외
+      // let point = req.body.label;
+      // if (isNotEmpty(point))
+      //   card.point = point;
+
+      card.save();
+      return res.send(card.detail())
+    })
+    .catch(function (err) {
+      console.error(err);
+      return res.send({message: err});
+    });
+};
+
+function isNotEmpty(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
 cards.attach = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
   let submissionUrl = req.body.url;
 
   Card.findOne({id: cardId})
-    .then(card => isAssignee(card, userId))
     .then(card => exist(card, cardId))
+    .then(card => isAssignee(card, userId))
     .then(function (card) {
       if (isEmpty(req.body.url))
         return res.send(400, {message: 'Url is empty'});
@@ -107,12 +140,12 @@ function updateCardState(req, res, action, checkAuth) {
         return res.send({message: `Card cannot be ${action}. current state: ${card.currentState()}`})
       }
       if (fsm[action](card, req.body) === false) {
-        return res.send({message: `Card cannot be ${action}. userId: ${req.body.userId}, staking: ${req.body.staking}`})
+        return res.send({message: `Card cannot be ${action}. userId: ${req.body.userId}, point: ${req.body.point}`})
       }
 
       card.state = fsm.state;
       card.save(function (err, saved) {
-        if (err) return res.send(err);
+        if (err) return res.send(500, {message: err});
         return res.send(saved.detail())
       })
     })
