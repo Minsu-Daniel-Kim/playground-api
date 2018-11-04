@@ -70,7 +70,7 @@ cardSchema.methods.shorten = function () {
     title: this.title,
     description: truncate.apply(this.description, [100, true]),
     state: this.state,
-    label: (this.point || 0).toString(),
+    label: (this.point || '').toString(),
     assigneeId: this.assigneeId
   }
 };
@@ -96,7 +96,7 @@ cardSchema.methods.detail = function () {
     description: this.description,
     state: this.state,
     assigneeId: this.assigneeId,
-    label: (this.point || 0).toString(),
+    label: (this.point || '').toString(),
     remainPoint: this.remainPoint,
     ttl: this.ttl,
     startedDate: this.startedDate,
@@ -164,8 +164,7 @@ cardSchema.methods.clear = function () {
 };
 
 cardSchema.methods.currentState = function () {
-  if (this.state === undefined)
-    this.state = CardState.BACKLOG;
+  this.state = (this.state || CardState.BACKLOG);
   return this.state;
 };
 
