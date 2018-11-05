@@ -9,8 +9,7 @@ const SLASH_AMOUNT = 1;
 
 function takeTokens(card, amount, type, reason) {
   TokenPool.find({userId: card.assigneeId, projectId: card.projectId})
-    .then(pool => pool.log(card.id, card.projectId, amount, type, reason))
-    .then(pool => pool.save())
+    .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
     .catch(function (e) {
       console.error(e);
     });

@@ -41,10 +41,10 @@ let fsm = new StateMachine({
 
       card.assigneeId = params.userId;
       card.staking = params.staking;
-      card.ttl = card.timeLimit;
+      card.ttl = card.point * MS_PER_HOUR;
       card.remainPoint = card.point;
       card.startedAt = new Date();
-      card.dueDate = new Date() + card.timeLimit * MS_PER_HOUR;
+      card.dueDate = new Date() + card.ttl;
       // TODO add history
       // card.history.push({})
 
