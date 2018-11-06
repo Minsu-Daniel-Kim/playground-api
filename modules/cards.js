@@ -1,8 +1,10 @@
+const moment = require('moment');
 let Card = require('../models/cards');
 let Project = require('../models/projects');
 let cardState = require('../models/card_state');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
+const mailer = require('../jobs/mails/mailer2');
 require('../jobs/slashJob');
 require('../jobs/notiExpireJob');
 
@@ -103,7 +105,7 @@ cards.attach = function (req, res) {
 };
 
 function isEmpty(str) {
-  return str === undefined || str === '' || str === null;
+  return str === undefined || str === null || str === '';
 }
 
 cards.ready = function (req, res) {
@@ -112,14 +114,21 @@ cards.ready = function (req, res) {
 
 cards.assign = function (req, res) {
   let cardId = req.params.id;
+  let userId = req.body.userId;
 
-  // TODO do this after update card state
-  agenda.now('sendMail', {cardId: cardId});
-  let job = agenda.create('slash', {cardId: cardId});
-  job.repeatEvery('1 hour', {skipImmediate: true});
-  job.save();
+  return updateCardState(req, res, 'assigned', isMentee, function (card) {
+    mailer.cardAssigned(card, userId);
 
-  return updateCardState(req, res, 'assigned', isMentee)
+    let job = agenda.create('slash', {cardId: cardId});
+    job.repeatEvery('1 hour', {skipImmediate: true});
+    job.save();
+
+    // TODO card point가 1이면 noti expiration을 다르게 줘야함
+    agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {
+      cardId: cardId,
+      userId: userId
+    });
+  })
 };
 
 cards.giveUp = function (req, res) {
@@ -130,7 +139,7 @@ cards.submit = function (req, res, next) {
   return updateCardState(req, res, 'submitted', isAssignee)
 };
 
-function updateCardState(req, res, action, checkAuth) {
+function updateCardState(req, res, action, checkAuth, afterUpdate) {
   Card.findOne({id: req.params.id})
     .then(card => exist(card, req.params.id))
     .then(card => checkAuth(card, req.body.userId))
@@ -146,6 +155,8 @@ function updateCardState(req, res, action, checkAuth) {
       card.state = fsm.state;
       card.save(function (err, saved) {
         if (err) return res.send(500, {message: err});
+        if (afterUpdate !== undefined)
+          afterUpdate(card);
         return res.send(saved.detail())
       })
     })

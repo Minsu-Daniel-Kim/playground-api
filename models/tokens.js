@@ -7,15 +7,13 @@ let schema = new mongoose.Schema({
   projectId: String,
   userId: String,
   totalAmount: Number,
-  histories: [
-    {
-      sourceId: String,
-      type: String,
-      desc: String,
-      amount: Number,
-      createdAt: Date
-    }
-  ],
+  histories: [{
+    // sourceId: String,
+    // type: String,
+    // desc: String,
+    // amount: Number,
+    // createdAt: Date
+  }],
   createdBy: String,
   createdAt: Date,
   modifiedAt: Date
@@ -26,7 +24,7 @@ schema.statics.new = function (projectId, userId) {
     id: "token" + randomString.generate(8),
     projectId: projectId,
     userId: userId,
-    staking: 0,
+    totalAmount: 0,
     histories: [],
     createdBy: "SYSTEM",
     createdAt: new Date(),
@@ -35,7 +33,7 @@ schema.statics.new = function (projectId, userId) {
 };
 
 schema.methods.log = function (id, amount, type, reason) {
-  this.staking += amount;
+  this.totalAmount += amount;
   this.histories.push({
     sourceId: id,
     type: type, // ENROLL, CARD_ASSIGN, SLASH, TIME_OUT

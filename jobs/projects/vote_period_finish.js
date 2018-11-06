@@ -1,13 +1,11 @@
 const agenda = require('../agenda');
 const common = require('../common');
-
-let fsm = require('../tasks/cardstate');
-
-const VotingPeriodMailer = require('../mails/vote_period_finished_mailer');
+const fsm = require('../tasks/cardstate');
 const Project = require('../../models/projects');
 const Card = require('../../models/cards');
+const TokenPool = require('../../models/tokens');
 const CardState = require('../../models/card_state');
-const StakingPool = require('../../models/stakings');
+const VotingPeriodMailer = require('../mails/vote_period_finished_mailer');
 
 
 /** const value */
@@ -33,11 +31,11 @@ function updateState(card, action) {
 
 function transfer(card, amount, type, reason) {
   // TODO add/sub tokens to user
-  // StakingPool.findOne({userId: card.assigneeId})
-  //   .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
-  //   .catch(function (e) {
-  //     console.error(e);
-  //   });
+  TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+    .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
+    .catch(function (e) {
+      console.error(e);
+    });
 }
 
 function accept(card) {

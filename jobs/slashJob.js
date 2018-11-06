@@ -4,12 +4,13 @@ const CardState = require('../models/card_state');
 const TokenPool = require('../models/tokens');
 const fsm = require('../tasks/cardstate');
 
-const MS_PER_HOUR = 1000 * 60 * 60;
+
 const SLASH_AMOUNT = 1;
 
 function takeTokens(card, amount, type, reason) {
-  TokenPool.find({userId: card.assigneeId, projectId: card.projectId})
-    .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
+  // TODO staking pool에서 꺼내가야함
+  TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+    .then(pool => pool.log(card.id, amount, type, reason).save())
     .catch(function (e) {
       console.error(e);
     });
@@ -27,21 +28,20 @@ agenda.define('slash', (job, done) => {
         return;
       }
 
-      card.ttl -= MS_PER_HOUR;
-      if (card.ttl > 0) {
-        card.remainPoint -= SLASH_AMOUNT;
-        // slash
+      if (card.slashCount  > 0) {
+        card.slashCount -= SLASH_AMOUNT;
         takeTokens(card, -1 * SLASH_AMOUNT, "SLASH", "slash");
       } else {
+        // slash count == point이므로 이미 slash 할 토큰이 없음
         fsm.goto(card.currentState());
         fsm.timesup(card);
-        // take token
-        if (card.remainPoint > 0)
-          takeTokens(card, -1 * card.remainPoint, "TIME_OUT", "time out");
+        // if (card.remainPoint > 0)
+        //   takeTokens(card, -1 * card.remainPoint, "TIME_OUT", "time out");
         job.remove();
       }
       card.save(function (err) {
-        if (err) return console.error(err);
+        if (err) console.error(err);
+        console.log(`timeout ${cardId}`);
       });
       done()
     })

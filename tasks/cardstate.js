@@ -1,9 +1,7 @@
 var StateMachine = require('javascript-state-machine');
-var moment = require('moment');
 
 var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
-var mailer = require('../jobs/mails/mailer2');
 var agenda = require('../jobs/agenda');
 
 
@@ -42,17 +40,12 @@ let fsm = new StateMachine({
       card.assigneeId = params.userId;
       card.staking = params.staking;
       card.ttl = card.point * MS_PER_HOUR;
-      card.remainPoint = card.point;
+      // card.remainPoint = card.point;
       card.startedAt = new Date();
       card.dueDate = new Date() + card.ttl;
       // TODO add history
       // card.history.push({})
 
-      mailer.cardAssigned(card, params.userId);
-      agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {
-        cardId: card.id,
-        userId: params.userId
-      })
     },
     onSubmitted: function (lifecycle, card, params) {
       console.log('onSubmitted');

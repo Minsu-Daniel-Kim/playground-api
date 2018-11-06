@@ -7,44 +7,42 @@ let cardSchema = new mongoose.Schema({
   projectId: String,
   title: String,
   description: String,
-  comments: [
-    {
-      id: String,
-      parentId: String,
-      title: String,
-      content: String,
-      userId: String,
-      createdDate: Date,
-      approved: Boolean,
-      approver: String
-    }
-  ],
+
   startedDate: Date,
   dueDate: Date,
-  timeLimit: Number,
-  ttl: Number,            // card countdown time
-  point: Number,          // maximum possible gain point
-  gained: Number,         // actually gained point
+  ttl: Number,            // TODO delete
+  slashCount: Number,     // 남은 slash 횟수
+  point: Number,          // 카드가 accept 되었을 때 얻을 수 있는 포인트
 
   // Assignee
   assigneeId: String,     // assignee id
   staking: Number,        // how much assignee staked
-  remainPoint: Number,  // how much assignee can gain
+  // remainPoint: Number, // how much assignee can gain
   submissionUrl: String,  // jupyter notebook address
 
-  // meta information
-  createdDate: Date,    // card created time
-  createdBy: String,  // card creator id
-  state: String,
-
-  // vote
+  // VOTE
+  gained: Number,         // vote로 얻은 점수
   rates: [{
     userId: String,
     point: Number,
     createdDate: Date
   }],
 
-  // history
+  comments: [{
+    id: String,
+    parentId: String,
+    title: String,
+    content: String,
+    userId: String,
+    createdDate: Date,
+    approved: Boolean,
+    approver: String
+  }],
+
+  // meta information
+  createdDate: Date,    // card created time
+  createdBy: String,  // card creator id
+  state: String,
   history: []
 });
 
@@ -99,7 +97,6 @@ cardSchema.methods.detail = function () {
     assigneeId: this.assigneeId,
     point: this.point,
     label: (this.point || '').toString(),
-    remainPoint: this.remainPoint,
     ttl: this.ttl,
     startedDate: this.startedDate,
     dueDate: this.dueDate,
@@ -161,7 +158,6 @@ cardSchema.methods.clear = function () {
   this.staking = null;
   this.submissionUrl = null;
   this.ttl = -1;
-  this.remainPoint = null;
   this.state = CardState.NOT_STARTED;
 };
 
