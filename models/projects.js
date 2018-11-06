@@ -4,11 +4,13 @@ var schema = new mongoose.Schema({
   id: String,           // projectXXXXXXXX
   name: String,
   description: String,  // description of project
-  reputation: Number,
   startAt: Date,
   endAt: Date,
-  stakingAmount: Number,
   requiredMemberCount: Number,
+  requirement: {
+    stakingAmount: Number,
+    reputation: Number,
+  },
   members: [{
     userId: String,
     role: String,       // TODO enum: TPM, TA, MEMBER
@@ -22,25 +24,37 @@ var schema = new mongoose.Schema({
   }],
   state: String,        // TEMP, OPEN, STARTED, FINISHED
   private: Boolean,      // open <-> private
+  // voting period sprintCount 만큼 지정된다
   sprintCount: Number,
-  // TODO voting period는 프로젝트 생성시 지정된다
-  votingPeriods:
-    [{
-      cardCount:Number,
-      startAt: Date,
-      endAt: Date
-    }],
+  votingPeriods: [{
+    cardCount: Number,
+    startAt: Date,
+    endAt: Date
+  }],
   createdBy: String,
   createdDate: Date
 });
+
+schema.statics.new = function (name, desc, startAt, endAt, createdBy) {
+  return new Project({
+    name: name,
+    description: desc,
+    state: "TEMP",
+    members: [],
+    candidates: [],
+    votingPeriods: [],
+    createdBy: createdBy,
+    createdDate: new Date()
+  });
+};
 
 schema.methods.to_json = function () {
   return {
     id: this.id,
     name: this.name,
     description: this.description,
-    reputation: this.reputation,
-    stakingAmount:this.stakingAmount,
+    reputation: this.requirement.reputation,
+    stakingAmount: this.requirement.stakingAmount,
     startAt: this.startAt,
     endAt: this.endAt,
     owner: this.createdBy,
@@ -114,7 +128,7 @@ schema.methods.enrolled = function (userId) {
 };
 
 /**
- * TPM이 멤버를 candidate로 변경한다. 
+ * TPM이 멤버를 candidate로 변경한다.
  * @param userId
  * @returns {mongoose.Schema.methods}
  */

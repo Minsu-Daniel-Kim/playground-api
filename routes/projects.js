@@ -24,6 +24,33 @@ router.get('/', function (req, res, next) {
   })
 });
 
+router.post('/new', function (req, res) {
+  let title = req.body.title;
+  let desc = req.body.description;
+  let userId = req.body.userId;
+
+  let project = Project.new(title, desc, userId);
+
+  project.startAt = req.body.startAt;
+  project.endAt = req.body.endAt;
+  project.requiredMemberCount = req.body.requiredMemberCount;
+  project.requirement = {
+    stakingAmount: req.body.stakingAmount,
+    reputation: req.body.reputation,
+  };
+  project.sprintCount = req.body.sprintCount;
+  project.votingPeriods = [];
+
+  project.save()
+    .then(function (saved) {
+      res.send(project);
+    })
+    .catch(function (e) {
+      console.error(e);
+      res.send(500, {message: ''});
+    });
+});
+
 router.get('/:id', function (req, res, next) {
   Project.findOne({id: req.params.id}, function (err, project) {
     if (err) return console.error(err);
@@ -46,7 +73,6 @@ router.get('/:id/cards', function (req, res, next) {
     });
 });
 
-//
 /**
  * Project에 카드를 생성한다
  * TPM, TA, MEMBER 모두 생성가능
