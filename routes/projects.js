@@ -2,6 +2,7 @@ let randomstring = require("randomstring");
 let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
+let CardState = require('../models/card_state');
 let StakingPool = require('../models/stakings');
 
 let agenda = require('../jobs/agenda');
@@ -81,26 +82,17 @@ router.post('/:id/card', function (req, res, next) {
   let projectId = req.params.id;
   let userId = req.body.userId;
   if (userId === undefined || userId === null) {
-    return res.send(400, {message: "no userId"});
+    return res.send(401, {message: "no userId"});
   }
 
-  Project.findOne({id: req.params.id})
+  Project.findOne({id: projectId})
     .then(function (project) {
-      if (project === null) return notFound(req, res);
-      Card.new({
-        id: "card" + randomstring.generate(8),
-        projectId: projectId,
-        title: getOrDefault(req.body.title, ''),
-        description: getOrDefault(req.body.description, ''),
-        createdDate: new Date(),
-        createdBy: userId,
-        state: CardState.BACKLOG,
-        history: [],
-        comments: []
-      }).save(function (err, saved) {
-        if (err) return res.send(err);
-        return res.send({message: "success to register card"});
-      });
+      if (project === undefined || project === null) notFound(req, res);
+      Card.new(projectId, userId, req.body.title, req.body.description)
+        .save(function (err, saved) {
+          if (err) return res.send(500, {message: err});
+          return res.send({message: "success to register card"});
+        });
     })
     .catch(function (error) {
       console.error(error);
@@ -111,8 +103,7 @@ router.post('/:id/card', function (req, res, next) {
 router.get('/:id/candidates', function (req, res) {
   Project.findOne({id: req.params.id})
     .then(function (project) {
-      if (project === undefined || project === null)
-        notFound(req, res);
+      if (project === undefined || project === null) notFound(req, res);
       return res.send({candidates: toCandidate(project.candidates)})
     })
     .catch(function (error) {

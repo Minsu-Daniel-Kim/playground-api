@@ -50,12 +50,14 @@ cardSchema.statics.new = function (projectId, userId, title, description) {
   return new Card({
     id: "card" + randomString.generate(8),
     projectId: projectId,
-    title: getOrDefault(title, ''),
-    description: getOrDefault(description, ''),
+    title: (title || ''),
+    description: (description || ''),
     state: CardState.BACKLOG,
+    history: [],
+    comments: [],
     createdBy: userId,
     createdDate: new Date()
-  })
+  });
 };
 
 /**
