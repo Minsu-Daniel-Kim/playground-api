@@ -2,6 +2,7 @@ const moment = require('moment');
 let Card = require('../models/cards');
 let Project = require('../models/projects');
 let cardState = require('../models/card_state');
+let TokenPool = require('../models/tokens');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
 const mailer = require('../jobs/mails/mailer2');
@@ -112,27 +113,47 @@ cards.ready = function (req, res) {
   return updateCardState(req, res, 'ready', isMentor);
 };
 
+function scheduleAfterAssignment(card, userId) {
+  let job = agenda.create('slash', {cardId: card.id});
+  job.repeatEvery('1 hour', {skipImmediate: true});
+  job.save();
+
+  // TODO card point가 1이면 noti expiration을 다르게 줘야함
+  let expiredAt = moment(card.dueDate).add(-1, 'hours').calendar();
+  agenda.schedule(expiredAt, 'notiExpiration', {cardId: card.id, userId: userId});
+
+  mailer.cardAssigned(card, userId);
+}
+
 cards.assign = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
+  let stakingAmount = req.body.staking;
 
   return updateCardState(req, res, 'assigned', isMentee, function (card) {
-    mailer.cardAssigned(card, userId);
-
-    let job = agenda.create('slash', {cardId: cardId});
-    job.repeatEvery('1 hour', {skipImmediate: true});
-    job.save();
-
-    // TODO card point가 1이면 noti expiration을 다르게 줘야함
-    agenda.schedule(moment(card.dueDate).add(-1, 'hours').calendar(), 'notiExpiration', {
-      cardId: cardId,
-      userId: userId
-    });
-  })
+    TokenPool.findOne({userId: userId, projectId: card.projectId})
+      .then(function (tokens) {
+        tokens.stake(card.id, stakingAmount).save();
+      })
+      .catch(function (e) {
+        console.error(e);
+      });
+    scheduleAfterAssignment(card, userId, cardId);
+  });
 };
 
 cards.giveUp = function (req, res) {
-  return updateCardState(req, res, 'gaveup', isAssignee)
+  let userId = req.body.userId;
+
+  return updateCardState(req, res, 'gaveup', isAssignee, function (card) {
+    TokenPool.findOne({userId: userId, projectId: card.projectId})
+      .then(function (tokens) {
+        tokens.returnStake(card.id, "GIVE_UP").save();
+      })
+      .catch(function (e) {
+        console.error(e);
+      });
+  });
 };
 
 cards.submit = function (req, res, next) {

@@ -7,10 +7,9 @@ const fsm = require('../tasks/cardstate');
 
 const SLASH_AMOUNT = 1;
 
-function takeTokens(card, amount, type, reason) {
-  // TODO staking pool에서 꺼내가야함
+function slash(card, amount) {
   TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(pool => pool.log(card.id, amount, type, reason).save())
+    .then(pool => pool.slash(card.id, amount).save())
     .catch(function (e) {
       console.error(e);
     });
@@ -28,15 +27,13 @@ agenda.define('slash', (job, done) => {
         return;
       }
 
-      if (card.slashCount  > 0) {
-        card.slashCount -= SLASH_AMOUNT;
-        takeTokens(card, -1 * SLASH_AMOUNT, "SLASH", "slash");
+      if (card.slashCount > 0) {
+        card.slashCount += SLASH_AMOUNT;
+        slash(card, SLASH_AMOUNT);
       } else {
         // slash count == point이므로 이미 slash 할 토큰이 없음
         fsm.goto(card.currentState());
         fsm.timesup(card);
-        // if (card.remainPoint > 0)
-        //   takeTokens(card, -1 * card.remainPoint, "TIME_OUT", "time out");
         job.remove();
       }
       card.save(function (err) {

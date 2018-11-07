@@ -7,16 +7,13 @@ var schema = new mongoose.Schema({
   projectId: String,
   totalPoint: Number,
 
-  histories: [  // point history
-    // {
+  histories: [{
     //   sourceId: String,
     //   type: String,
     //   desc: String,
     //   point: Number,
     //   createdAt: Date
-    // }
-  ],
-
+  }],
   expectTransDate: Date, // reputation 변환 예정일
   realTransDate: Date,   // 실제 변환일
   createdBy: String,

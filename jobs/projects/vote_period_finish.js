@@ -29,23 +29,22 @@ function updateState(card, action) {
   card.updateState(fsm.state).save();
 }
 
-function transfer(card, amount, type, reason) {
-  // TODO add/sub tokens to user
+function accept(card) {
+  updateState(card, 'accepted');
   TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(pool => pool.log(card.id, card.projectId, amount, type, reason).save())
+    .then(tokens => tokens.returnStake(card.id, "ACCEPTED").save())
     .catch(function (e) {
       console.error(e);
     });
 }
 
-function accept(card) {
-  updateState(card, 'accepted');
-  transfer(card, card.remainPoint, "ACCEPTED", "card is accepted");
-}
-
 function reject(card) {
   updateState(card, 'rejected');
-  transfer(card, -1 * card.remainPoint, "REJECTED", "card is rejected");
+  TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+    .then(tokens => tokens.consumeStake(card.id).save())
+    .catch(function (e) {
+      console.error(e);
+    });
 }
 
 function acceptOrReject(card) {
