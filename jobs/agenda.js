@@ -1,9 +1,9 @@
 const Agenda = require('agenda');
 
 const agenda = new Agenda({db: {address: process.env.DATABASE_URL, collection: 'agendaJobs'}})
-  .defaultLockLifetime(0)
-  .processEvery('5 seconds')
-  .defaultConcurrency(100);
+  .defaultLockLifetime(2000)
+  .processEvery('3 seconds')
+  .defaultConcurrency(200);
 
 // require(`./slashJob.js`);
 // require(`./notiExpireJob.js`);
