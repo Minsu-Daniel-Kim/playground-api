@@ -57,7 +57,7 @@ schema.methods.findOrCreateLedger = function (cardId) {
 };
 
 schema.methods.stake = function (cardId, amount) {
-  let ledger = findOrCreateLedger(this, cardId);
+  let ledger = this.findOrCreateLedger(cardId);
   this.totalAmount -= amount;
   ledger.staked += amount;
   ledger.histories.push({
@@ -69,7 +69,7 @@ schema.methods.stake = function (cardId, amount) {
 };
 
 schema.methods.slash = function (cardId, amount) {
-  let ledger = findOrCreateLedger(this, cardId);
+  let ledger = this.findOrCreateLedger(cardId);
   ledger.slashed += amount;
   ledger.histories.push({
     amount: amount,
@@ -80,7 +80,7 @@ schema.methods.slash = function (cardId, amount) {
 };
 
 schema.methods.consumeStake = function (cardId) {
-  let ledger = findOrCreateLedger(this, cardId);
+  let ledger = this.findOrCreateLedger(cardId);
   let left = ledger.staked - ledger.consumed;
   ledger.consumed += left;
   ledger.histories.push({
@@ -98,7 +98,7 @@ schema.methods.consumeStake = function (cardId) {
  * @returns {mongoose.Schema.methods}
  */
 schema.methods.returnStake = function (cardId, type) {
-  let ledger = findOrCreateLedger(this, cardId);
+  let ledger = this.findOrCreateLedger(cardId);
   let left = ledger.staked - ledger.consumed;
   this.totalAmount += left;
   ledger.staked -= left;

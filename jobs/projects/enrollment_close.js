@@ -39,6 +39,7 @@ function returnStaking(userId, projectId, project) {
 
 agenda.define('closeEnrollment', (job, done) => {
   let projectId = job.attrs.data.projectId;
+  console.log(`closeEnrollment: ${projectId}`);
 
   Project.findOne({id: projectId})
     .then(function (project) {
@@ -46,6 +47,7 @@ agenda.define('closeEnrollment', (job, done) => {
 
       // Send celebrate message to members
       let userIds = project.students().map(e => e.userId);
+      console.log(`students: ${userIds}`);
       common.sendNotificationWithCallback(project, userIds, function (users) {
         updateEnrollState(users, projectId);
         users.map(user => mailer.memberSelected(projectName, user));
