@@ -210,7 +210,7 @@ cards.reset = function (req, res, next) {
 };
 
 cards.resetAll = function (req, res, next) {
-  Card.find({state: cardState.BACKLOG})
+  Card.find({state: {$in: [cardState.IN_PROGRESS, cardState.IN_REVIEW, cardState.IN_COMPLETE]}})
     .then(function (cards) {
       cards.map(card => {
         card.clear();

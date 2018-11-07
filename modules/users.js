@@ -14,17 +14,21 @@ users.listAll = function (req, res) {
 };
 
 users.getOne = function (req, res) {
-  User.findOne({id: req.params.id}, function (err, user) {
-    if (err) return console.error(err);
-    if (user === null) return res.send({message: "Can't find user"});
-    return res.send(user.to_json());
-  })
+  User.findOne({id: req.params.id})
+    .then(function (user) {
+      if (user === undefined || user === null) return notFount(res);
+      return res.send(user.to_json());
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: 'Something went wrong'});
+    })
 };
 
 users.enrolledProjects = function (req, res) {
   User.findOne({id: req.params.id})
     .then(function (user) {
-      if (user === null) return notFount(res);
+      if (user === undefined || user === null) return notFount(res);
       return res.send(user.projects);
     })
     .catch(function (error) {

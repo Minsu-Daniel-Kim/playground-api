@@ -139,10 +139,6 @@ cardSchema.methods.detail = function () {
   }
 };
 
-function toComment(comment) {
-
-}
-
 function getOrDefault(value, defaultValue) {
   return value !== undefined ? value : defaultValue;
 }
