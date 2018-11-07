@@ -148,8 +148,8 @@ router.post('/:id/apply', function (req, res, next) {
         return res.status(406).send({message: `Enrollment is not open!`});
       if (project.applied(userId) || project.enrolled(userId))
         return res.send(400, {message: `Already applied: ${userId}`});
-      if (staking !== project.stakingAmount)
-        return res.send(406, {message: `Invalid staking amount. need: ${project.stakingAmount} given:${staking} `});
+      if (staking !== project.requirement.stakingAmount)
+        return res.send(406, {message: `Invalid staking amount for project:${projectId}, need: ${project.requirement.stakingAmount} given:${staking}`});
 
       project.apply(userId, staking).save();
 
