@@ -10,7 +10,6 @@ var schema = new mongoose.Schema({
   histories: [{
     //   sourceId: String,
     //   type: String,
-    //   desc: String,
     //   point: Number,
     //   createdAt: Date
   }],
@@ -34,12 +33,11 @@ schema.statics.new = function (projectId, userId, giver) {
   })
 };
 
-schema.methods.add = function (id, point, type, reason) {
+schema.methods.add = function (id, point, type) {
   this.totalPoint += point;
   this.histories.push({
     sourceId: id,
     type: type, // CARD, COMMENT
-    desc: reason,
     point: point,
     createdAt: new Date()
   });

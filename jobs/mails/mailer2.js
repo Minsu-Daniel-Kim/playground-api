@@ -67,6 +67,11 @@ module.exports.projectFinished = function (projectName, user) {
   })
 };
 
+/**
+ * 유저가 Card를 가져가는 경우 메일을 보냄
+ * @param card
+ * @param userId
+ */
 module.exports.cardAssigned = function (card, userId) {
   // TODO for temporary
   // User.findOne({id: userId})

@@ -4,6 +4,7 @@ const fsm = require('../tasks/cardstate');
 const Project = require('../../models/projects');
 const Card = require('../../models/cards');
 const TokenPool = require('../../models/tokens');
+const PointPool = require('../../models/points');
 const CardState = require('../../models/card_state');
 const VotingPeriodMailer = require('../mails/vote_period_finished_mailer');
 
@@ -36,6 +37,17 @@ function accept(card) {
     .catch(function (e) {
       console.error(e);
     });
+  // accepted card 작업자에게 포인트를 준다
+  PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+    .then(function (points) {
+      points.add(card.id, /*TODO card의 point도 고려해야함*/card.gained, "CARD").save();
+    })
+    .catch(function (e) {
+      console.error(e);
+    });
+
+  // TODO accepted card에 average보다 같거나 높은 점수를 투표한 사람에게 token을 준다
+  // TODO accepted card에 average보다 낮은 점수를 투표한 사람에게 페널티를 준다 - token 가져감
 }
 
 function reject(card) {
@@ -45,6 +57,8 @@ function reject(card) {
     .catch(function (e) {
       console.error(e);
     });
+  // TODO rejected card에 average보다 높은 점수를 투표한 사람에게 페널티를 준다 - token 가져감
+  // card.rated.map(e => e.point > card.gained);
 }
 
 function acceptOrReject(card) {

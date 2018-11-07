@@ -48,7 +48,6 @@ agenda.define('closeEnrollment', (job, done) => {
 
       // Send celebrate message to members
       let userIds = project.students().map(e => e.userId);
-      console.log(`students: ${userIds}`);
       userIds.map(id => {
         let tokens = TokenPool.new(projectId, id);
         tokens.add(100, "INITIAL").save();
