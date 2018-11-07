@@ -70,7 +70,23 @@ cardSchema.methods.shorten = function () {
     state: this.state,
     point: this.point,
     label: (this.point || '').toString(),
-    assigneeId: this.assigneeId
+    assigneeId: this.assigneeId,
+    metadata: {
+      title: this.title,
+      description: this.description,
+      comments: this.comments.map(comment => {
+        return {
+          id: comment.id,
+          parentId: comment.parentId,
+          title: comment.title,
+          content: comment.content,
+          userId: comment.userId,
+          createdAt: comment.createdDate,
+          approved: (comment.approved || false),
+          approver: (comment.approver || null)
+        }
+      })
+    }
   }
 };
 
@@ -101,7 +117,18 @@ cardSchema.methods.detail = function () {
     startedDate: this.startedDate,
     dueDate: this.dueDate,
     submissionUrl: this.submissionUrl,
-    comments: toComment.apply(this.comments),
+    comments: this.comments.map(comment => {
+      return {
+        id: comment.id,
+        parentId: comment.parentId,
+        title: comment.title,
+        content: comment.content,
+        userId: comment.userId,
+        createdAt: comment.createdDate,
+        approved: (comment.approved || false),
+        approver: (comment.approver || null)
+      }
+    })
     // rates: this.rates.map(rate => {
     //   return {
     //     userId: rate.userId,
@@ -112,17 +139,8 @@ cardSchema.methods.detail = function () {
   }
 };
 
-function toComment() {
-  return {
-    id: this.id,
-    parentId: this.parentId,
-    title: this.title,
-    content: this.content,
-    userId: this.userId,
-    createdDate: this.createdDate,
-    approved: getOrDefault(this.approved, false),
-    approver: getOrDefault(this.approver, null)
-  }
+function toComment(comment) {
+
 }
 
 function getOrDefault(value, defaultValue) {
