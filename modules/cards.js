@@ -367,7 +367,7 @@ cards.staking = function (req, res) {
     })
     .catch(function (e) {
       console.error(e);
-      return res.send(500, {message: e});
+      return res.send(400, {message: e});
     })
 };
 
