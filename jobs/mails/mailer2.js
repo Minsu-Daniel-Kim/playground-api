@@ -68,17 +68,18 @@ module.exports.projectFinished = function (projectName, user) {
 };
 
 module.exports.cardAssigned = function (card, userId) {
-  User.findOne({id: userId})
-    .then(function (user) {
-      sendMail({
-        to: user.email,
-        subject: `Cheer up ${user.nickname}!`,
-        body: `You just started ${card.title}! Good luck!`
-      })
-    })
-    .catch(function (err) {
-      return console.error(err)
-    })
+  // TODO for temporary
+  // User.findOne({id: userId})
+  //   .then(function (user) {
+  //     sendMail({
+  //       to: user.email,
+  //       subject: `Cheer up ${user.nickname}!`,
+  //       body: `You just started ${card.title}! Good luck!`
+  //     })
+  //   })
+  //   .catch(function (err) {
+  //     return console.error(err)
+  //   })
 };
 
 module.exports.notiExpiration = function (card, userId) {
