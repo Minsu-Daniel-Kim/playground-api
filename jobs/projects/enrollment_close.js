@@ -5,6 +5,7 @@ const common = require('../common');
 const Project = require('../../models/projects');
 const User = require('../../models/users');
 const StakingPool = require('../../models/stakings');
+const TokenPool = require('../../models/tokens');
 
 
 function bulkUpdateOp(user, projectId) {
@@ -48,6 +49,10 @@ agenda.define('closeEnrollment', (job, done) => {
       // Send celebrate message to members
       let userIds = project.students().map(e => e.userId);
       console.log(`students: ${userIds}`);
+      userIds.map(id => {
+        let tokens = TokenPool.new(projectId, id);
+        tokens.add(100, "INITIAL").save();
+      });
       common.sendNotificationWithCallback(project, userIds, function (users) {
         updateEnrollState(users, projectId);
         users.map(user => mailer.memberSelected(projectName, user));

@@ -278,13 +278,13 @@ router.post('/:id/close-enrollment', function (req, res) {
       if (project === undefined || project === null) notFound(req, res);
       if (project.state !== "OPEN")
         return res.status(406).send({message: `Cannot start project with state:${project.state}`});
-
       agenda.now('closeEnrollment', {projectId: projectId});
 
       return res.send({message: `Success`})
     })
     .catch(function (error) {
       console.error(error);
+      return res.send(500, {message: `Something went wrong`});
     })
 });
 

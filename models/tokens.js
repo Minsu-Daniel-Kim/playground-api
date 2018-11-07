@@ -41,6 +41,16 @@ schema.statics.new = function (projectId, userId) {
   })
 };
 
+schema.methods.add = function (amount, type) {
+  this.totalAmount += amount;
+  this.histories.push({
+    amount: amount,
+    type: type,
+    createdAt: new Date()
+  });
+  return this;
+};
+
 schema.methods.findOrCreateLedger = function (cardId) {
   let ledger = this.ledgers.find(e => e.cardId === cardId);
   if (ledger === undefined) {
