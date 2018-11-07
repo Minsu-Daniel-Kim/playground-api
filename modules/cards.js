@@ -255,6 +255,7 @@ cards.rate = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
   Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
     .then(card => isMember(card, userId))
     .then(function (card) {
       if (card.currentState() !== cardState.IN_REVIEW)
@@ -286,6 +287,7 @@ cards.approveComment = function (req, res) {
   let userId = req.body.userId;
 
   Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
@@ -319,6 +321,7 @@ cards.cancelApprove = function (req, res) {
   let userId = req.body.userId;
 
   Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
@@ -337,6 +340,34 @@ cards.cancelApprove = function (req, res) {
     .catch(function (err) {
       console.error(err);
       return res.send({message: err});
+    });
+};
+
+cards.staking = function (req, res) {
+  let cardId = req.params.id;
+  let userId = req.body.userId;
+  let stakingAmount = req.body.staking;
+
+  if (stakingAmount === undefined || stakingAmount < 0)
+    return res.send(406, {message: `Invalid staking amount ${stakingAmount}`});
+
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    .then(card => isAssignee(card, userId))
+    .then(function (card) {
+      TokenPool.findOne({userId: userId, projectId: card.projectId})
+        .then(function (tokens) {
+          tokens.stake(card.id, stakingAmount).save();
+          return res.send({message: `Success to stake: ${cardId}, ${stakingAmount}`});
+        })
+        .catch(function (e) {
+          console.error(e);
+          return res.send(500, {message: e});
+        });
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: e});
     })
 };
 

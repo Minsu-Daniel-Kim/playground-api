@@ -56,6 +56,13 @@ router.post('/:id/comments/:commentId/cancel-approve', function (req, res, next)
   return cardModule.cancelApprove(req, res);
 });
 
+/**
+ * card의 데드라인이 얼마 남지 않은 경우 추가 staking을 한다.
+ */
+router.post('/:id/staking', function (req, res) {
+  return cardModule.staking(req, res);
+});
+
 
 /** WARN: For development */
 router.post('/:id/reset', function (req, res, next) {
