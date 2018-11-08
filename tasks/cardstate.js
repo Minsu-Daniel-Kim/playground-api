@@ -1,8 +1,6 @@
 var StateMachine = require('javascript-state-machine');
-
 var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
-var agenda = require('../jobs/agenda');
 
 
 const MS_PER_HOUR = 1000 * 60 * 60;
@@ -26,11 +24,9 @@ let fsm = new StateMachine({
   methods: {
     onReady: function (lifecycle, card, params) {
       console.log('onReady');
-      console.log(params.point );
       if (params.point === undefined || params.point < 0)
         return false;
       card.point = params.point;
-      // card.timeLimit = card.point * _MS_PER_DAY
     },
     onAssigned: function (lifecycle, card, params) {
       console.log('onAssigned');
@@ -39,9 +35,9 @@ let fsm = new StateMachine({
 
       card.assigneeId = params.userId;
       card.staking = params.staking;
-      card.ttl = card.point * MS_PER_HOUR;
-      card.startedAt = new Date();
-      card.dueDate = new Date() + card.ttl;
+      // card.ttl = card.point * MS_PER_HOUR;
+      card.startedDate = new Date();
+      card.dueDate = new Date(Date.now() + (card.point * MS_PER_HOUR));
       // TODO add history
       // card.history.push({})
     },

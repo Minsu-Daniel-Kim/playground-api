@@ -60,6 +60,12 @@ cardSchema.statics.new = function (projectId, userId, title, description) {
   });
 };
 
+function getTtl(card) {
+  if (card.state !== CardState.IN_PROGRESS)
+    return -1;
+  return Math.round((card.dueDate - new Date()) / 1000);
+}
+
 /**
  * List view에서 보여질 정보를 리턴한다
  * @returns {{id: *, title: *, description: *, state: *, point: *, assigneeId: *}}
@@ -73,6 +79,7 @@ cardSchema.methods.shorten = function () {
     point: this.point,
     label: (this.point || '').toString(),
     assigneeId: this.assigneeId,
+    ttl: getTtl(this),
     metadata: {
       title: this.title,
       description: this.description,

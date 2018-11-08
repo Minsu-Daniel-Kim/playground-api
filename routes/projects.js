@@ -1,10 +1,7 @@
-let randomstring = require("randomstring");
 let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
-let CardState = require('../models/card_state');
 let StakingPool = require('../models/stakings');
-
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
 require('../jobs/projects/project_start');
