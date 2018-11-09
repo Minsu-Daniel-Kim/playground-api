@@ -33,9 +33,9 @@ function updateState(card, action) {
   card.updateState(fsm.state).save();
 }
 
-function processToken(card, funcName, params) {
+function processToken(card, funcName, type) {
   TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(tokens => tokens[funcName](params).save())
+    .then(tokens => tokens[funcName](card.id, type).save())
     .catch(function (e) {
       console.error(e);
     });
@@ -67,7 +67,7 @@ function giveVotePenalty(card) {
 
 function accept(card) {
   updateState(card, 'accepted');
-  processToken(card, 'returnStake', {cardId: card.id, type: "ACCEPTED"});
+  processToken(card, 'returnStake', "ACCEPTED");
 
   // accepted card 작업자에게 포인트를 준다
   PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
@@ -86,7 +86,7 @@ function accept(card) {
 
 function reject(card) {
   updateState(card, 'rejected');
-  processToken(card, 'consumeStake', {cardId: card.id});
+  processToken(card, 'consumeStake', "REJECTED");
 
   // rejected card에 average의 50% 범위 내의 점수를 준 사람에게 어드밴티지를 준다
   giveVoteAdvantage(card);
