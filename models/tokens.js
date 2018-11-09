@@ -51,22 +51,22 @@ schema.methods.add = function (amount, type) {
   return this;
 };
 
-function newLedger(sourceId) {
+function newLedger(tokens, sourceId) {
   let ledger = {
     sourceId: sourceId,
     staked: 0,
     consumed: 0,
     histories: []
   };
-  this.ledgers.push(ledger);
-  return this.ledgers.find(e => e.sourceId === sourceId);
+  tokens.ledgers.push(ledger);
+  return tokens.ledgers.find(e => e.sourceId === sourceId);
 }
 
 schema.methods.findOrCreateLedger = function (sourceId) {
   // TODO find by type
   let ledger = this.ledgers.find(e => e.sourceId === sourceId);
   if (ledger === undefined) {
-    return newLedger(sourceId);
+    return newLedger(this, sourceId);
   }
   return ledger;
 };
@@ -109,7 +109,7 @@ schema.methods.consumeStake = function (cardId) {
 
 schema.methods.penalty = function (cardId, amount) {
   this.totalAmount -= amount;
-  let ledger = newLedger(cardId);
+  let ledger = newLedger(this, cardId);
   ledger.histories.push({
     amount: amount,
     type: "VOTE_PENALTY",
@@ -120,7 +120,7 @@ schema.methods.penalty = function (cardId, amount) {
 
 schema.methods.advantage = function (cardId, amount) {
   this.totalAmount += amount;
-  let ledger = newLedger(cardId);
+  let ledger = newLedger(this, cardId);
   ledger.histories.push({
     amount: amount,
     type: "VOTE_ADVANTAGE",

@@ -31,7 +31,7 @@ function returnStaking(userId, projectId, project) {
     .then(pool => {
       if (pool === null)
         return console.error(`Staking pool is not exist of ${userId} in ${projectId}`);
-      pool.log(projectId, project.stakingAmount * -1, "WITHDRAW", "").save()
+      pool.log(projectId, project.requirement.stakingAmount * -1, "WITHDRAW", "").save()
     })
     .catch(function (e) {
       console.error(e);
