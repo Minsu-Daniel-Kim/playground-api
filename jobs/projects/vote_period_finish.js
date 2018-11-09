@@ -1,6 +1,6 @@
 const agenda = require('../agenda');
 const common = require('../common');
-const fsm = require('../tasks/cardstate');
+const fsm = require('../../tasks/cardstate');
 const Project = require('../../models/projects');
 const Card = require('../../models/cards');
 const TokenPool = require('../../models/tokens');
@@ -11,6 +11,9 @@ const VotingPeriodMailer = require('../mails/vote_period_finished_mailer');
 
 /** const value */
 const BOUNDARY_SCORE = 6;
+const RANGE = .5;
+const PENALTY_AMOUNT = 1;
+const ADVANTAGE_AMOUNT = 1;
 
 function getAveragePoint(rates) {
   let sum = rates.map(rate => rate.point).reduce((total, num) => {
@@ -30,35 +33,65 @@ function updateState(card, action) {
   card.updateState(fsm.state).save();
 }
 
-function accept(card) {
-  updateState(card, 'accepted');
+function processToken(card, funcName, params) {
   TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(tokens => tokens.returnStake(card.id, "ACCEPTED").save())
+    .then(tokens => tokens[funcName](params).save())
     .catch(function (e) {
       console.error(e);
     });
+}
+
+function processTokens(userIds, card, funcName, amount) {
+  TokenPool.find({$in: {userId: userIds}, projectId: card.projectId})
+    .then(function (tokens) {
+      tokens.map(token => token[funcName](card.id, amount)).save();
+    })
+    .catch(function (e) {
+      console.error(e);
+    });
+}
+
+function giveVoteAdvantage(card) {
+  let inRated = card.rates.filter(rate =>
+    rate.point * (1 + RANGE) >= card.gained && rate.point * (1 - RANGE) <= card.gained)
+    .map(rate => rate.userId);
+  processTokens(inRated, card, 'advantage', ADVANTAGE_AMOUNT);
+}
+
+function giveVotePenalty(card) {
+  let outRated = card.rates.filter(rate =>
+    rate.point * (1 + RANGE) < card.gained || rate.point * (1 - RANGE) > card.gained)
+    .map(rate => rate.userId);
+  processTokens(outRated, card, 'penalty', PENALTY_AMOUNT);
+}
+
+function accept(card) {
+  updateState(card, 'accepted');
+  processToken(card, 'returnStake', {cardId: card.id, type: "ACCEPTED"});
+
   // accepted card 작업자에게 포인트를 준다
   PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
     .then(function (points) {
-      points.add(card.id, /*TODO card의 point도 고려해야함*/card.gained, "CARD").save();
+      points.add(card.id, /*TODO card의 rate point gained 도 고려해야함*/card.point, "CARD").save();
     })
     .catch(function (e) {
       console.error(e);
     });
 
-  // TODO accepted card에 average보다 같거나 높은 점수를 투표한 사람에게 token을 준다
-  // TODO accepted card에 average보다 낮은 점수를 투표한 사람에게 페널티를 준다 - token 가져감
+  // accepted card에 average의 50% 범위 내의 점수를 준 사람에게 어드밴티지를 준다
+  giveVoteAdvantage(card);
+  // accepted card에 average의 50% 범위 외의 점수를 투표한 사람에게 페널티를 준다
+  giveVotePenalty(card);
 }
 
 function reject(card) {
   updateState(card, 'rejected');
-  TokenPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(tokens => tokens.consumeStake(card.id).save())
-    .catch(function (e) {
-      console.error(e);
-    });
-  // TODO rejected card에 average보다 높은 점수를 투표한 사람에게 페널티를 준다 - token 가져감
-  // card.rated.map(e => e.point > card.gained);
+  processToken(card, 'consumeStake', {cardId: card.id});
+
+  // rejected card에 average의 50% 범위 내의 점수를 준 사람에게 어드밴티지를 준다
+  giveVoteAdvantage(card);
+  // rejected card에 average의 50% 범위 외의 점수를 투표한 사람에게 페널티를 준다
+  giveVotePenalty(card);
 }
 
 function acceptOrReject(card) {
@@ -73,17 +106,18 @@ agenda.define('finishVotePeriod', (job, done) => {
   Project.findOne({id: projectId})
     .then(function (project) {
       // find in review cards
-      Card.find({projectId: project.id, state: CardState.IN_PROGRESS})
+      Card.find({projectId: project.id, state: CardState.IN_REVIEW})
         .then(function (cards) {
           if (cards === null) return;
-          cards.map(card => {
-            acceptOrReject(card);
-          });
+          cards.map(card => acceptOrReject(card));
         })
         .catch(function (error) {
           console.error(error);
         });
-      // send mail
+
+      // TODO return vote staking
+      // 한 번도 투표를 하지 않은 사람의 token consume
+
       common.sendNotification(project, VotingPeriodMailer.send);
     })
     .catch(function (err) {

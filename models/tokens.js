@@ -107,6 +107,29 @@ schema.methods.consumeStake = function (cardId) {
   return this;
 };
 
+schema.methods.penalty = function (cardId, amount) {
+  this.totalAmount -= amount;
+  let ledger = newLedger(cardId);
+  ledger.histories.push({
+    amount: amount,
+    type: "VOTE_PENALTY",
+    createdAt: new Date()
+  });
+  return this;
+};
+
+schema.methods.advantage = function (cardId, amount) {
+  this.totalAmount += amount;
+  let ledger = newLedger(cardId);
+  ledger.histories.push({
+    amount: amount,
+    type: "VOTE_ADVANTAGE",
+    createdAt: new Date()
+  });
+  return this;
+};
+
+
 /**
  * 카드가 accept 되거나 Asignee가 카드를 포기한 경우 token을 돌려준다
  * @param cardId
