@@ -184,7 +184,7 @@ function updateCardState(req, res, action, checkAuth, afterUpdate) {
     })
     .catch(function (error) {
       console.log(error);
-      return res.send({message: error});
+      return res.send(400, {message: error});
     });
 }
 
