@@ -4,7 +4,7 @@ var PointPool = require('../models/points');
 
 
 // const MS_PER_HOUR = 1000 * 60 * 60;
-const MS_PER_HOUR = 1000 * 15; // TODO 
+const MS_PER_HOUR = 1000 * 15; // TODO
 
 let fsm = new StateMachine({
   init: CardState.BACKLOG,
@@ -50,11 +50,11 @@ let fsm = new StateMachine({
     },
     onAccepted: function (lifecycle, card, params) {
       console.log('onAccepted');
-      PointPool.findOne({projectId: card.projectId, userId: card.assigneeId})
-        .then(pointPool => addPoint(pointPool, card))
-        .catch(function (e) {
-          console.error(e);
-        });
+      // PointPool.findOne({projectId: card.projectId, userId: card.assigneeId})
+      //   .then(pointPool => addPoint(pointPool, card))
+      //   .catch(function (e) {
+      //     console.error(e);
+      //   });
     },
     onRejected: function (lifecycle, card, params) {
       console.log('onRejected');
@@ -77,17 +77,17 @@ let fsm = new StateMachine({
 const CARD_TYPE = "CARD";
 const DEFAULT_MODIFIER = "SYSTEM";
 
-function addPoint(pointPool, card) {
-  return new Promise((resolve, reject) => {
-    if (pointPool === undefined || pointPool === null)
-      pointPool = PointPool.new(card.projectId, card.assigneeId);
-
-    pointPool.add(card.id, card.gained, CARD_TYPE, "Card accepted", DEFAULT_MODIFIER);
-    pointPool.save(function (err, saved) {
-      if (err) reject();
-      resolve(pointPool)
-    });
-  })
-}
+// function addPoint(pointPool, card) {
+//   return new Promise((resolve, reject) => {
+//     if (pointPool === undefined || pointPool === null)
+//       pointPool = PointPool.new(card.projectId, card.assigneeId);
+//
+//     pointPool.add(card.id, card.gained, CARD_TYPE, "Card accepted", DEFAULT_MODIFIER);
+//     pointPool.save(function (err, saved) {
+//       if (err) reject();
+//       resolve(pointPool)
+//     });
+//   })
+// }
 
 module.exports = fsm;

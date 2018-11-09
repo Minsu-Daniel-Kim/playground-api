@@ -42,7 +42,7 @@ function processToken(card, funcName, type) {
 }
 
 function processTokens(userIds, card, funcName, amount) {
-  TokenPool.find({$in: {userId: userIds}, projectId: card.projectId})
+  TokenPool.find({userId: {$in: userIds}, projectId: card.projectId})
     .then(function (tokens) {
       tokens.map(token => token[funcName](card.id, amount)).save();
     })
@@ -106,7 +106,7 @@ agenda.define('finishVotePeriod', (job, done) => {
   Project.findOne({id: projectId})
     .then(function (project) {
       // find in review cards
-      Card.find({projectId: project.id, state: CardState.IN_REVIEW})
+      Card.findOne({projectId: project.id, state: CardState.IN_REVIEW})
         .then(function (cards) {
           if (cards === null) return;
           cards.map(card => acceptOrReject(card));

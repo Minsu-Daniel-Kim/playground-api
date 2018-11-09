@@ -255,6 +255,8 @@ cards.comment = function (req, res) {
 cards.rate = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
+  let point = req.body.point;
+
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMember(card, userId))
@@ -264,15 +266,15 @@ cards.rate = function (req, res) {
       if (card.hasRated(userId))
         return res.send({message: `already rated by ${userId}`});
 
-      card.rate(userId, req.body.point);
+      card.rate(userId, point);
       card.save(function (err) {
         if (err) return res.send(err);
-        return res.send({message: "success to register comment"})
+        return res.send({message: "success to rate card"})
       })
     })
     .catch(function (err) {
       console.error(err);
-      return res.send({message: err})
+      return res.send(400, {message: err})
     })
 };
 

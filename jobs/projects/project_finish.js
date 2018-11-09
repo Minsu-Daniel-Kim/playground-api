@@ -20,12 +20,12 @@ function storeReputation(userId, projectId, point) {
 }
 
 function settlePoints(studentIds, projectId) {
-  PointPool.find({$in: {userId: studentIds}, projectId: projectId})
+  PointPool.find({userId: {$in: studentIds}, projectId: projectId})
     .then(function (points) {
       if (points === null) {
         return console.warn(`token pool is empty: ${studentIds} in ${projectId}`);
       }
-      points.map(token => storeReputation(token.userId, projectId, token.totalAmount));
+      points.map(point => storeReputation(point.userId, projectId, (point.totalPoint || 0)));
     })
     .catch(function (e) {
       console.error(e);
