@@ -5,9 +5,6 @@ const agenda = new Agenda({db: {address: process.env.DATABASE_URL, collection: '
   .processEvery('3 seconds')
   .defaultConcurrency(200);
 
-// require(`./slashJob.js`);
-// require(`./notiExpireJob.js`);
-
 // let jobTypes = process.env.JOB_TYPES ? process.env.JOB_TYPES.split(',') : [];
 // jobTypes.forEach(function(type) {
 //   require(`./${type}.js`);

@@ -116,7 +116,7 @@ cards.ready = function (req, res) {
 function scheduleAfterAssignment(card, userId) {
   let job = agenda.create('slash', {cardId: card.id});
   // job.repeatEvery('1 hour', {skipImmediate: true}); // TODO
-  job.repeatEvery('5 seconds', {skipImmediate: true}); // TODO
+  job.repeatEvery('15 seconds', {skipImmediate: true}); // TODO
   job.save();
 
   // TODO card point가 1이면 noti expiration을 다르게 줘야함
