@@ -181,6 +181,7 @@ cardSchema.methods.clear = function () {
   this.staking = null;
   this.submissionUrl = null;
   this.ttl = -1;
+  this.slashCount = this.point;
   this.state = CardState.NOT_STARTED;
 };
 

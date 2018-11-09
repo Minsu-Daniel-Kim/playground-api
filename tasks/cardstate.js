@@ -3,7 +3,8 @@ var CardState = require('../models/card_state');
 var PointPool = require('../models/points');
 
 
-const MS_PER_HOUR = 1000 * 60 * 60;
+// const MS_PER_HOUR = 1000 * 60 * 60;
+const MS_PER_HOUR = 1000 * 5;
 
 let fsm = new StateMachine({
   init: CardState.BACKLOG,

@@ -28,7 +28,7 @@ agenda.define('slash', (job, done) => {
       }
 
       if (card.slashCount > 0) {
-        card.slashCount += SLASH_AMOUNT;
+        card.slashCount -= SLASH_AMOUNT;
         slash(card, SLASH_AMOUNT);
       } else {
         // slash count == point이므로 이미 slash 할 토큰이 없음
@@ -38,7 +38,6 @@ agenda.define('slash', (job, done) => {
       }
       card.save(function (err) {
         if (err) console.error(err);
-        console.log(`timeout ${cardId}`);
       });
       done()
     })
