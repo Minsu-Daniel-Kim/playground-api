@@ -18,7 +18,7 @@ function scheduleProjectFinish(project) {
 function scheduleVotingPeriod(project) {
   console.log('scheduleVotingPeriod');
   project.votingPeriods.map(period => {
-    agenda.schedule(period.startAt, 'startVotePeriod', {projectId: project.id});
+    agenda.schedule(period.startAt, 'startVotePeriod', {projectId: project.id, votingPeriodId: period.id});
   })
 }
 

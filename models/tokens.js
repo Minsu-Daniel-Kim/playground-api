@@ -8,7 +8,7 @@ let schema = new mongoose.Schema({
   userId: String,
   totalAmount: Number,
   ledgers: [{
-    cardId: String,
+    sourceId: String,
     staked: Number,
     consumed: Number,
     histories: [{
@@ -51,28 +51,34 @@ schema.methods.add = function (amount, type) {
   return this;
 };
 
-schema.methods.findOrCreateLedger = function (cardId) {
-  let ledger = this.ledgers.find(e => e.cardId === cardId);
+function newLedger(sourceId) {
+  let ledger = {
+    sourceId: sourceId,
+    staked: 0,
+    consumed: 0,
+    histories: []
+  };
+  this.ledgers.push(ledger);
+  return this.ledgers.find(e => e.sourceId === sourceId);
+}
+
+schema.methods.findOrCreateLedger = function (sourceId) {
+  // TODO find by type
+  let ledger = this.ledgers.find(e => e.sourceId === sourceId);
   if (ledger === undefined) {
-    ledger = {
-      cardId: cardId,
-      staked: 0,
-      consumed: 0,
-      histories: []
-    };
-    this.ledgers.push(ledger);
-    return this.ledgers.find(e => e.cardId === cardId);
+    return newLedger(sourceId);
   }
   return ledger;
 };
 
-schema.methods.stake = function (cardId, amount) {
-  let ledger = this.findOrCreateLedger(cardId);
+schema.methods.stake = function (sourceId, amount, stakeType) {
+  let ledger = this.findOrCreateLedger(sourceId);
   this.totalAmount -= amount;
   ledger.staked += amount;
   ledger.histories.push({
     amount: amount,
     type: "STAKING",
+    code: stakeType,
     createdAt: new Date()
   });
   return this;
@@ -80,7 +86,7 @@ schema.methods.stake = function (cardId, amount) {
 
 schema.methods.slash = function (cardId, amount) {
   let ledger = this.findOrCreateLedger(cardId);
-  ledger.slashed += amount;
+  ledger.consumed += amount;
   ledger.histories.push({
     amount: amount,
     type: "SLASH",

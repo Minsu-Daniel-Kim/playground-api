@@ -27,7 +27,8 @@ var schema = new mongoose.Schema({
   // voting period sprintCount 만큼 지정된다
   sprintCount: Number,
   votingPeriods: [{
-    cardCount: Number,  // votePeriod Id를 들고있는게 나을지도
+    id: String,
+    cardCount: Number,
     startAt: Date,
     endAt: Date
   }],
