@@ -6,16 +6,17 @@ let schema = new mongoose.Schema({
   email: String,
   accountAddress: String,
   createdDate: Date,
-  reputation: Number,
   profileImageUrl: String, // gravata address
   point: Number,
-  role: String,
+  // role: String,
+  reputation: Number,
   projects: [{
     projectId: String,
     joinedAt: Date,
     startedDate: Date,
     endedDate: Date,
     staking: Number,
+    gainedPoint: Number,
     state: String //"APPLIED", "WITHDRAW", "APPROVED
   }],
 });
@@ -29,7 +30,7 @@ schema.methods.to_json = function () {
     createdDate: this.createdDate,
     coinBalance: 0,
     reputation: this.reputation,
-    role: this.role,
+    // role: this.role,
     profileImageUrl: this.profileImageUrl,
     projects: this.projects
   }
