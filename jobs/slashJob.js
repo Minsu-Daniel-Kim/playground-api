@@ -27,10 +27,11 @@ agenda.define('slash', (job, done) => {
         return;
       }
 
-      if (card.slashCount > 0) {
-        card.slashCount -= SLASH_AMOUNT;
-        slash(card, SLASH_AMOUNT);
-      } else {
+      card.slashCount -= SLASH_AMOUNT;
+      slash(card, SLASH_AMOUNT);
+      if (card.slashCount <= 0) {
+        // if (card.slashCount > 0) {
+        // } else {
         // slash count == point이므로 이미 slash 할 토큰이 없음
         fsm.goto(card.currentState());
         fsm.timesup(card);
