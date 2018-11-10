@@ -2,7 +2,7 @@ const Agenda = require('agenda');
 
 const agenda = new Agenda({db: {address: process.env.DATABASE_URL, collection: 'agendaJobs'}})
   .defaultLockLifetime(2000)
-  .processEvery('3 seconds')
+  .processEvery('1 second')
   .defaultConcurrency(200);
 
 // let jobTypes = process.env.JOB_TYPES ? process.env.JOB_TYPES.split(',') : [];
