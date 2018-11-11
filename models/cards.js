@@ -90,7 +90,7 @@ cardSchema.methods.shorten = function () {
     metadata: {
       title: this.title,
       description: this.description,
-      submissions: this.submissions.map(e=> {
+      submissions: this.submissions.map(e => {
         return {
           id: e.id,
           url: e.url,
@@ -219,9 +219,11 @@ cardSchema.methods.rate = function (userId, point) {
   });
 };
 
+const DELIMITER = "_";
+
 cardSchema.methods.addComment = function (title, content, userId, parentId) {
   this.comments.push({
-    id: "comment" + randomString.generate(8),
+    id: "comment" + DELIMITER + randomString.generate(8),
     parentId: parentId,
     title: title,
     content: content,
@@ -233,7 +235,12 @@ cardSchema.methods.addComment = function (title, content, userId, parentId) {
 cardSchema.methods.addSubmission = function (submissionUrl) {
   if (this.submissions === undefined || this.submissions === null)
     this.submissions = [];
-  this.submissions.push({id: "1", url: submissionUrl, createdAt: new Date(), citations: []});
+  this.submissions.push({
+    id: "submission" + DELIMITER + randomString.generate(8),
+    url: submissionUrl,
+    createdAt: new Date(),
+    citations: []
+  });
   return this;
 };
 
