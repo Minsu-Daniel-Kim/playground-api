@@ -81,7 +81,8 @@ function isNotEmpty(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
-cards.attach = function (req, res) {
+// TODO
+cards.addSubmission = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
   let submissionUrl = req.body.url;
@@ -93,8 +94,7 @@ cards.attach = function (req, res) {
       if (isEmpty(req.body.url))
         return res.send(400, {message: 'Url is empty'});
 
-      card.submissionUrl = submissionUrl;
-      card.save(function (err, saved) {
+      card.addSubmission(submissionUrl).save(function (err, saved) {
         if (err) return res.send(err);
         return res.send(saved.detail())
       })
@@ -302,7 +302,7 @@ cards.approveComment = function (req, res) {
       card.save(function (err) {
         if (err) return res.send(err);
         return res.send({message: "success to approve comment"})
-      })
+      });
 
       // TODO add point to user
     })

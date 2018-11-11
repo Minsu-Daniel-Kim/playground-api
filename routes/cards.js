@@ -9,7 +9,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/:id/submission', function (req, res, next) {
-  return cardModule.attach(req, res);
+  return cardModule.addSubmission(req, res);
 });
 
 router.get('/:id', function (req, res, next) {

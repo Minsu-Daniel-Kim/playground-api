@@ -18,8 +18,15 @@ let cardSchema = new mongoose.Schema({
   assigneeId: String,     // assignee id
   staking: Number,        // how much assignee staked
   // remainPoint: Number, // how much assignee can gain
-  submissionUrl: String,  // jupyter notebook address
-
+  submissions: [{
+    id: String,
+    url: String,
+    citations: [{
+      cardId: String,
+      sourceId: String,   // submission's id
+    }],
+    createdAt: Date
+  }],
   // VOTE
   gained: Number,         // vote로 얻은 점수
   rates: [{
@@ -83,6 +90,14 @@ cardSchema.methods.shorten = function () {
     metadata: {
       title: this.title,
       description: this.description,
+      submissions: this.submissions.map(e=> {
+        return {
+          id: e.id,
+          url: e.url,
+          citations: e.citations,
+          createdAt: e.createdAt
+        }
+      }),
       comments: this.comments.map(comment => {
         return {
           id: comment.id,
@@ -125,7 +140,6 @@ cardSchema.methods.detail = function () {
     ttl: this.ttl,
     startedDate: this.startedDate,
     dueDate: this.dueDate,
-    submissionUrl: this.submissionUrl,
     comments: this.comments.map(comment => {
       return {
         id: comment.id,
@@ -163,7 +177,6 @@ cardSchema.methods.all = function () {
     point: this.point,
     assigneeId: this.assigneeId,
     staking: this.staking,
-    submissionUrl: this.submissionUrl,
     gained: this.gained,
     createdDate: this.createdDate,
     createdBy: this.createdBy,
@@ -179,7 +192,6 @@ cardSchema.methods.clear = function () {
   this.dueDate = null;
   this.assigneeId = null;
   this.staking = null;
-  this.submissionUrl = null;
   this.ttl = -1;
   this.slashCount = this.point;
   this.state = CardState.NOT_STARTED;
@@ -218,6 +230,12 @@ cardSchema.methods.addComment = function (title, content, userId, parentId) {
   });
 };
 
+cardSchema.methods.addSubmission = function (submissionUrl) {
+  if (this.submissions === undefined || this.submissions === null)
+    this.submissions = [];
+  this.submissions.push({id: "1", url: submissionUrl, createdAt: new Date(), citations: []});
+  return this;
+};
 
 var Card = mongoose.model('Card', cardSchema);
 
@@ -276,7 +294,6 @@ module.exports = Card;
 //   timeLimit: 6431,
 //   point: 2,
 //   assigneeId: "user_xqm5wXXas",
-//   submissionUrl: "https://gist.github.com/Rabierre/b19081de9f75f2679a02d8f7f87a6a4a",
 //   ttl: 1427,
 //   createdDate:  Date.now(),
 //   createdBy: 'user_xfdmwXAs',
@@ -316,7 +333,6 @@ module.exports = Card;
 //   timeLimit: 28800,
 //   point: 1,
 //   assigneeId: "user_xqm5wXXas",
-//   submissionUrl: "https://gist.github.com/Rabierre/b19081de9f75f2679a02d8f7f87a6a4a",
 //   ttl: 4431,
 //   createdDate:  Date.now(),
 //   createdBy: 'user_xfdmwXAs',
