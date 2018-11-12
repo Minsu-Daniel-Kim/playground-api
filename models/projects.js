@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+let randomString = require("randomstring");
 
 var schema = new mongoose.Schema({
   id: String,           // projectXXXXXXXX
@@ -6,11 +7,28 @@ var schema = new mongoose.Schema({
   description: String,  // description of project
   startAt: Date,
   endAt: Date,
-  requiredMemberCount: Number,
+  private: Boolean,      // open <-> private
+  memberCount: {
+    min: Number,
+    max: Number
+  },
   requirement: {
     stakingAmount: Number,
     reputation: Number,
   },
+  // voting period sprintCount 만큼 지정된다
+  sprintCount: Number,
+  votingPeriods: [{
+    id: String,
+    cardCount: Number,
+    startAt: Date,
+    endAt: Date
+  }],
+  poolAllocation: {
+    tmp: Number,
+    member: Number
+  },
+  openFunding: Boolean,
   members: [{
     userId: String,
     role: String,       // TODO enum: TPM, TA, MEMBER
@@ -23,21 +41,15 @@ var schema = new mongoose.Schema({
     joinedDate: Date
   }],
   state: String,        // TEMP, OPEN, STARTED, FINISHED
-  private: Boolean,      // open <-> private
-  // voting period sprintCount 만큼 지정된다
-  sprintCount: Number,
-  votingPeriods: [{
-    id: String,
-    cardCount: Number,
-    startAt: Date,
-    endAt: Date
-  }],
   createdBy: String,
   createdDate: Date
 });
 
+const DELIMITER = "_";
+
 schema.statics.new = function (name, desc, startAt, endAt, createdBy) {
   return new Project({
+    id: "project" + DELIMITER + randomString.generate(8),
     name: name,
     description: desc,
     state: "TEMP",

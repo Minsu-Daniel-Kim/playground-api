@@ -7,7 +7,8 @@ require('./vote_period_start');
 
 
 function canStart(project) {
-  return project.students().length === project.requiredMemberCount;
+  let studentCount = project.students().length;
+  return studentCount >= project.memberCount.min && studentCount <= project.memberCount.max;
 }
 
 function scheduleProjectFinish(project) {

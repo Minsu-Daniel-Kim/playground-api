@@ -29,14 +29,8 @@ router.post('/new', function (req, res) {
   let userId = req.body.userId;
 
   let project = Project.new(title, desc, userId);
-
   project.startAt = req.body.startAt;
   project.endAt = req.body.endAt;
-  project.requiredMemberCount = req.body.requiredMemberCount;
-  project.requirement = {
-    stakingAmount: req.body.stakingAmount,
-    reputation: req.body.reputation,
-  };
   project.sprintCount = req.body.sprintCount;
   project.votingPeriods = [];
 
@@ -46,7 +40,57 @@ router.post('/new', function (req, res) {
     })
     .catch(function (e) {
       console.error(e);
-      res.send(500, {message: ''});
+      res.send(500, {message: 'Something went wrong'});
+    });
+});
+
+router.post('/:id/requirement', function (req, res) {
+  let projectId = req.params.id;
+  Project.findOne({id: projectId})
+  // TODO check project is in TEMP state
+    .then(function (project) {
+      // Course 최소, 최대 참여 인원수
+      project.memberCount = {
+        min: req.body.memberCount.min,
+        max: req.body.memberCount.max
+      };
+      project.requirement = {
+        stakingAmount: req.body.requirement.staking,
+        reputation: req.body.requirement.reputation,
+      };
+
+      project.save().catch(function (e) {
+        console.error(e);
+        res.send(500, {message: 'Something went wrong'});
+      });
+      res.send(project);
+    })
+    .catch(function (e) {
+      console.error(e);
+      res.send(500, {message: 'Something went wrong'});
+    });
+});
+
+router.post('/:id/funding', function (req, res) {
+  let projectId = req.params.id;
+  Project.findOne({id: projectId})
+    // TODO check project is in TEMP state
+    .then(function (project) {
+      project.poolAllocation = {
+        tmp: req.body.tmpStake,
+        member: req.body.memberStake
+      };
+      project.openFunding = req.body.openFunding;
+
+      project.save().catch(function (e) {
+        console.error(e);
+        res.send(500, {message: 'Something went wrong'});
+      });
+      res.send(project);
+    })
+    .catch(function (e) {
+      console.error(e);
+      res.send(500, {message: 'Something went wrong'});
     });
 });
 
