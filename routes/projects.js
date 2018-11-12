@@ -2,6 +2,7 @@ let Project = require('../models/projects');
 let Card = require('../models/cards');
 let User = require('../models/users');
 let StakingPool = require('../models/stakings');
+let Submission = require('../models/submissions');
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
 require('../jobs/projects/project_start');
@@ -57,13 +58,38 @@ router.get('/:id', function (req, res, next) {
   });
 });
 
+let getSubmissions = function (cards) {
+  let cardIds = cards.map(e => e.id);
+  return new Promise((resolve, reject) => {
+    Submission.find({cardId: {$in: cardIds}})
+      .then(function (subs) {
+        return resolve({cards: cards, subs: subs});
+      })
+      .catch(function (e) {
+        return reject(error);
+      });
+  });
+};
+
+
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
   Card.find({projectId: projectId})
-    .then(function (cards) {
+    .then(cards => getSubmissions(cards))
+    .then(function (values) {
+      console.log(values);
+      let cards = values.cards;
+      let subs = values.subs;
       if (cards === null)
         return res.send({message: `Can't find cards by: ${projectId}`});
-      return res.send(cards.map(card => card.shorten()));
+      return res.send(cards.map(card => {
+        let dto = card.shorten();
+        // dto.submissions = subs;
+        dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
+          return {id: e.id, url: e.url, citations: e.citations}
+        });
+        return dto;
+      }));
     })
     .catch(function (error) {
       console.error(error);

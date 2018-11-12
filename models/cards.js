@@ -17,16 +17,15 @@ let cardSchema = new mongoose.Schema({
   // Assignee
   assigneeId: String,     // assignee id
   staking: Number,        // how much assignee staked
-  // remainPoint: Number, // how much assignee can gain
-  submissions: [{
-    id: String,
-    url: String,
-    citations: [{
-      cardId: String,
-      sourceId: String,   // submission's id
-    }],
-    createdAt: Date
-  }],
+  // submissions: [{
+  //   id: String,
+  //   url: String,
+  //   citations: [{
+  //     cardId: String,
+  //     sourceId: String,   // submission's id
+  //   }],
+  //   createdAt: Date
+  // }],
   // VOTE
   gained: Number,         // vote로 얻은 점수
   rates: [{
@@ -90,14 +89,14 @@ cardSchema.methods.shorten = function () {
     metadata: {
       title: this.title,
       description: this.description,
-      submissions: this.submissions.map(e => {
-        return {
-          id: e.id,
-          url: e.url,
-          citations: e.citations,
-          createdAt: e.createdAt
-        }
-      }),
+      // submissions: this.submissions.map(e => {
+      //   return {
+      //     id: e.id,
+      //     url: e.url,
+      //     citations: e.citations,
+      //     createdAt: e.createdAt
+      //   }
+      // }),
       comments: this.comments.map(comment => {
         return {
           id: comment.id,
@@ -232,19 +231,7 @@ cardSchema.methods.addComment = function (title, content, userId, parentId) {
   });
 };
 
-cardSchema.methods.addSubmission = function (submissionUrl) {
-  if (this.submissions === undefined || this.submissions === null)
-    this.submissions = [];
-  this.submissions.push({
-    id: "submission" + DELIMITER + randomString.generate(8),
-    url: submissionUrl,
-    createdAt: new Date(),
-    citations: []
-  });
-  return this;
-};
-
-var Card = mongoose.model('Card', cardSchema);
+let Card = mongoose.model('Card', cardSchema);
 
 module.exports = Card;
 

@@ -1,5 +1,6 @@
 const moment = require('moment');
 let Card = require('../models/cards');
+let Submission = require('../models/submissions');
 let Project = require('../models/projects');
 let cardState = require('../models/card_state');
 let TokenPool = require('../models/tokens');
@@ -94,10 +95,10 @@ cards.addSubmission = function (req, res) {
       if (isEmpty(req.body.url))
         return res.send(400, {message: 'Url is empty'});
 
-      card.addSubmission(submissionUrl).save(function (err, saved) {
+      Submission.new(card.id, submissionUrl).save(function (err) {
         if (err) return res.send(err);
-        return res.send(saved.detail())
-      })
+        return res.send({message: "Success"});
+      });
     })
     .catch(function (err) {
       console.error(err);
