@@ -7,9 +7,10 @@ let schema = new mongoose.Schema({
   accountAddress: String,
   createdDate: Date,
   profileImageUrl: String, // gravata address
-  point: Number,
-  // role: String,
   reputation: Number,
+  qualified: Boolean,
+  qualifier: String, // adminId
+  role: String, // auth
   projects: [{
     projectId: String,
     joinedAt: Date,
@@ -27,7 +28,7 @@ schema.methods.to_json = function () {
     nickname: this.nickname,
     email: this.email,
     accountAddress: this.accountAddress,
-    createdDate: this.createdDate,
+    createdAt: this.createdDate,
     coinBalance: 0,
     reputation: this.reputation,
     // role: this.role,
@@ -75,10 +76,3 @@ schema.methods.enroll = function (projectId) {
 
 let User = mongoose.model('User', schema);
 module.exports = User;
-
-// let user1 = new User({ id: "abcde", nickname: "kitty", email: "rabierre@gmail.com", reputation: 0, point: 0, createdDate: Date.now()});
-// user1.save(function (err, user1) {
-//   if (err) return console.error(err);
-//   console.log('success to save')
-// });
-

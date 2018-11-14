@@ -139,7 +139,12 @@ router.get('/:id/cards', function (req, res, next) {
         let dto = card.shorten();
         // dto.submissions = subs;
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
-          return {id: e.id, url: e.url, citations: citationDto(e.citations), cited: citationDto(e.cited)}
+          return {
+            id: e.id,
+            url: e.url,
+            citations: citationDto(e.citations),
+            cited: citationDto(e.cited)
+          }
         });
         return dto;
       }));
@@ -161,7 +166,7 @@ router.post('/:id/card', function (req, res, next) {
     return res.send(401, {message: "no userId"});
   }
 
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
       Card.new(projectId, userId, req.body.title, req.body.description)
@@ -207,7 +212,7 @@ router.post('/:id/apply', function (req, res, next) {
     return res.send({message: `invalid argument: ${projectId}, ${userId}, ${staking}`})
   }
 
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === null)
         return res.send(404, {message: `Cant find project: ${projectId}`});
@@ -260,7 +265,7 @@ router.post('/:id/withdraw', function (req, res) {
     return res.status(406).send({message: `invalid argument: ${projectId}, ${userId}`})
   }
 
-  Project.findOne({id: projectId}, function (err, project) {
+  Project.findOne({id: projectId, qualified: true}, function (err, project) {
     if (project === null)
       return res.send(404, {message: `Cant find project: ${projectId}`});
     if (project.state !== "OPEN")
@@ -297,7 +302,8 @@ router.post('/:id/approve', function (req, res) {
   let candidate = req.body.candidateId;
   let userId = req.body.userId;
   // TODO check auth
-  Project.findOne({id: projectId})
+
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
         notFound(req, res);
@@ -320,7 +326,7 @@ router.post('/:id/disapprove', function (req, res) {
   let userId = req.body.userId;
 
   // TODO check auth
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
       if (candidate === undefined || candidate === null)
@@ -340,7 +346,7 @@ router.post('/:id/close-enrollment', function (req, res) {
   let projectId = req.params.id;
 
   // TODO check auth
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null) notFound(req, res);
       if (project.state !== "OPEN")
@@ -360,7 +366,7 @@ router.post('/:id/close-enrollment', function (req, res) {
  */
 router.post('/:id/publish', function (req, res) {
   let projectId = req.params.id;
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
         notFound(req, res);
@@ -404,9 +410,10 @@ function rankByPoint(cards, users) {
 
 router.get('/:id/rank', function (req, res) {
   let projectId = req.params.id;
-  Project.findOne({id: projectId})
+  Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
-      if (project === undefined || project === null) notFound(req, res);
+      if (project === undefined || project === null)
+        notFound(req, res);
 
       let memberIds = project.students().map(e => e.userId);
       Card.find({assigneeId: {$in: memberIds}, state: CardState.COMPLETE})

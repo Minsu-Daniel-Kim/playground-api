@@ -41,6 +41,8 @@ var schema = new mongoose.Schema({
     joinedDate: Date
   }],
   state: String,        // TEMP, OPEN, STARTED, FINISHED
+  qualified: Boolean,
+  qualifier: String, // adminId
   createdBy: String,
   createdDate: Date
 });

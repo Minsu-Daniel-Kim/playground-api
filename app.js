@@ -12,6 +12,7 @@ const cardsRouter = require('./routes/cards');
 const usersRouter = require('./routes/users');
 const projectsRouter = require('./routes/projects');
 const submissionsRouter = require('./routes/submissions');
+const adminRouter = require('./routes/admin');
 const testRouter = require('./routes/tests');
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/cards', cardsRouter);
 app.use('/users', usersRouter);
 app.use('/projects', projectsRouter);
 app.use('/submissions', submissionsRouter);
+app.use('/admin', adminRouter);
 // test apis
 app.use('/test', testRouter);
 
