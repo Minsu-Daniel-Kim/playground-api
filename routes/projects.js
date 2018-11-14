@@ -1,5 +1,6 @@
 let Project = require('../models/projects');
 let Card = require('../models/cards');
+let CardState = require('../models/card_state');
 let User = require('../models/users');
 let StakingPool = require('../models/stakings');
 let Submission = require('../models/submissions');
@@ -74,7 +75,7 @@ router.post('/:id/requirement', function (req, res) {
 router.post('/:id/funding', function (req, res) {
   let projectId = req.params.id;
   Project.findOne({id: projectId})
-    // TODO check project is in TEMP state
+  // TODO check project is in TEMP state
     .then(function (project) {
       project.poolAllocation = {
         tmp: req.body.tmpStake,
@@ -121,7 +122,6 @@ router.get('/:id/cards', function (req, res, next) {
   Card.find({projectId: projectId})
     .then(cards => getSubmissions(cards))
     .then(function (values) {
-      console.log(values);
       let cards = values.cards;
       let subs = values.subs;
       if (cards === null)
@@ -130,7 +130,7 @@ router.get('/:id/cards', function (req, res, next) {
         let dto = card.shorten();
         // dto.submissions = subs;
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
-          return {id: e.id, url: e.url, citations: e.citations}
+          return {id: e.id, url: e.url, citations: e.citations, cited: e.cited}
         });
         return dto;
       }));
@@ -367,11 +367,68 @@ router.post('/:id/publish', function (req, res) {
     })
     .catch(function (error) {
       console.error(error);
+      return res.send(500, {message: `Something went wrong`});
     })
 });
 
-function getOrDefault(value, defaultValue) {
-  return value !== undefined ? value : defaultValue;
+function compare(a, b) {
+  if (a.point < b.point)
+    return 1;
+  if (a.point > b.point)
+    return -1;
+  return 0;
 }
+
+function groupBy(objectArray, property) {
+  return objectArray.reduce(function (acc, obj) {
+    let key = obj[property];
+    acc[key] = obj;
+    return acc;
+  }, {});
+}
+
+function rankByPoint(cards, users) {
+  let points = new Map(), ranks = [];
+  cards.map(card => points.set(card.assigneeId, card.point + (points.get(card.assigneeId) || 0)));
+  let rank = 1;
+  Array.from(users).map(user => ranks.push({
+    rank: rank++,
+    id: user.id,
+    name: user.nickname,
+    point: (points.get(user.id) || 0)
+  }));
+  ranks.sort(compare);
+  return ranks;
+}
+
+router.get('/:id/rank', function (req, res) {
+  let projectId = req.params.id;
+  Project.findOne({id: projectId})
+    .then(function (project) {
+      if (project === undefined || project === null) notFound(req, res);
+
+      let memberIds = project.students().map(e => e.userId);
+      Card.find({assigneeId: {$in: memberIds}, state: CardState.COMPLETE})
+        .then(function (cards) {
+          User.find({id: {$in: memberIds}})
+            .then(function (users) {
+              let temp = rankByPoint(cards, users);
+              return res.send(temp);
+            })
+            .catch(function (error) {
+              console.error(error);
+              return res.send(500, {message: `Something went wrong`});
+            })
+        })
+        .catch(function (error) {
+          console.error(error);
+          return res.send(500, {message: `Something went wrong`});
+        });
+    })
+    .catch(function (error) {
+      console.error(error);
+      return res.send(500, {message: `Something went wrong`});
+    });
+});
 
 module.exports = router;

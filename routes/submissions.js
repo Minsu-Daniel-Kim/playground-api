@@ -18,7 +18,16 @@ router.post('/:id/cite', function (req, res) {
             sourceId: citationId
           });
           sub.save();
+          res.send({message: "Success"});
+        })
+        .catch(function (e) {
+          console.error(e);
+          res.send(500, {message: 'Something went wrong'});
         });
+    })
+    .catch(function (e) {
+      console.error(e);
+      res.send(500, {message: 'Something went wrong'});
     });
 });
 
