@@ -29,7 +29,17 @@ users.enrolledProjects = function (req, res) {
   User.findOne({id: req.params.id})
     .then(function (user) {
       if (user === undefined || user === null) return notFount(res);
-      return res.send(user.projects);
+      return res.send(user.projects.map(e => {
+        return {
+          projectId: e.projectId,
+          joinedAt: e.joinedAt,
+          startDate: e.startedDate,
+          endDate: e.endedDate,
+          staking: e.staking,
+          gainedPoint: e.gainedPoint,
+          state: e.state
+        }
+      }));
     })
     .catch(function (error) {
       console.error(error);
