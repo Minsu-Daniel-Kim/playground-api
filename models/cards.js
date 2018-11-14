@@ -33,7 +33,6 @@ let cardSchema = new mongoose.Schema({
     point: Number,
     createdDate: Date
   }],
-
   comments: [{
     id: String,
     parentId: String,
@@ -44,7 +43,6 @@ let cardSchema = new mongoose.Schema({
     approved: Boolean,
     approver: String
   }],
-
   // meta information
   createdDate: Date,    // card created time
   createdBy: String,  // card creator id
@@ -89,14 +87,6 @@ cardSchema.methods.shorten = function () {
     metadata: {
       title: this.title,
       description: this.description,
-      // submissions: this.submissions.map(e => {
-      //   return {
-      //     id: e.id,
-      //     url: e.url,
-      //     citations: e.citations,
-      //     createdAt: e.createdAt
-      //   }
-      // }),
       comments: this.comments.map(comment => {
         return {
           id: comment.id,

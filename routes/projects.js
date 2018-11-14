@@ -116,10 +116,19 @@ let getSubmissions = function (cards) {
   });
 };
 
+function citationDto(documents) {
+  return documents.map(doc => {
+    return {
+      submissionId: doc.sourceId,
+      cardId: doc.cardId,
+      date: doc.createdAt
+    }
+  });
+}
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
-  Card.find({projectId: projectId})
+  Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
     .then(function (values) {
       let cards = values.cards;
@@ -130,7 +139,7 @@ router.get('/:id/cards', function (req, res, next) {
         let dto = card.shorten();
         // dto.submissions = subs;
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
-          return {id: e.id, url: e.url, citations: e.citations, cited: e.cited}
+          return {id: e.id, url: e.url, citations: citationDto(e.citations), cited: citationDto(e.cited)}
         });
         return dto;
       }));
@@ -377,14 +386,6 @@ function compare(a, b) {
   if (a.point > b.point)
     return -1;
   return 0;
-}
-
-function groupBy(objectArray, property) {
-  return objectArray.reduce(function (acc, obj) {
-    let key = obj[property];
-    acc[key] = obj;
-    return acc;
-  }, {});
 }
 
 function rankByPoint(cards, users) {
