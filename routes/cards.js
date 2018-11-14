@@ -16,10 +16,6 @@ router.get('/:id', function (req, res, next) {
   return cardModule.shorten(req, res);
 });
 
-router.get('/:id/detail', function (req, res, next) {
-  return cardModule.detail(req, res);
-});
-
 router.post('/:id/update', function (req, res) {
   return cardModule.update(req, res);
 });
@@ -63,6 +59,19 @@ router.post('/:id/staking', function (req, res) {
   return cardModule.staking(req, res);
 });
 
+/**
+ * Card를 archive 한다
+ */
+router.post('/:id/archive', function (req, res) {
+  return cardModule.archive(req, res);
+});
+
+/**
+ * Card를 un-archive 한다
+ */
+router.post('/:id/un-archive', function (req, res) {
+  return cardModule.unArchive(req, res);
+});
 
 /** WARN: For development */
 router.post('/:id/reset', function (req, res, next) {

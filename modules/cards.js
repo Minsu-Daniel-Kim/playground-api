@@ -375,17 +375,41 @@ cards.staking = function (req, res) {
     })
 };
 
-function isMentor(card, userId) {
-  return checkRole(card, userId, ["TPM", "TA"]);
-}
+cards.archive = function (req, res) {
+  let cardId = req.params.id;
+  let userId = req.body.userId;
 
-function isMentee(card, userId) {
-  return checkRole(card, userId, ["MEMBER"]);
-}
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    .then(card => isMentor(card, userId))
+    .then(function (card) {
+      card.deleted = true;
+      card.save();
+      res.send({message: "Success to archive cards"});
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(400, {message: e});
+    });
+};
 
-function isMember(card, userId) {
-  return checkRole(card, userId, ["TPM", "TA", "MEMBER"]);
-}
+cards.unArchive = function (req, res) {
+  let cardId = req.params.id;
+  let userId = req.body.userId;
+
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    .then(card => isMentor(card, userId))
+    .then(function (card) {
+      card.deleted = false;
+      card.save();
+      res.send({message: "Success to un-archive cards"});
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(400, {message: e});
+    });
+};
 
 function checkRole(card, userId, roles) {
   return new Promise((resolve, reject) => {
@@ -401,6 +425,18 @@ function checkRole(card, userId, roles) {
         reject(error);
       });
   });
+}
+
+function isMentor(card, userId) {
+  return checkRole(card, userId, ["TPM", "TA"]);
+}
+
+function isMentee(card, userId) {
+  return checkRole(card, userId, ["MEMBER"]);
+}
+
+function isMember(card, userId) {
+  return checkRole(card, userId, ["TPM", "TA", "MEMBER"]);
 }
 
 function isAssignee(card, userId) {

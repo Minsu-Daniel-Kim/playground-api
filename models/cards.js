@@ -47,6 +47,7 @@ let cardSchema = new mongoose.Schema({
   createdDate: Date,    // card created time
   createdBy: String,  // card creator id
   state: String,
+  deleted: Boolean,
   history: []
 });
 
