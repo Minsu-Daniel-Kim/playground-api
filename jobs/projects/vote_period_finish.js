@@ -65,19 +65,23 @@ function giveVotePenalty(card) {
   processTokens(outRated, card, 'penalty', PENALTY_AMOUNT);
 }
 
+function extracted(card) {
+  PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+    .then(function (points) {
+      /*TODO card의 rate point gained 도 고려해야함*/
+      points.add(card.id, card.point, "CARD").save();
+    })
+    .catch(function (e) {
+      console.error(e);
+    });
+}
+
 function accept(card) {
   updateState(card, 'accepted');
   processToken(card, 'returnStake', "ACCEPTED");
 
   // accepted card 작업자에게 포인트를 준다
-  PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
-    .then(function (points) {
-      points.add(card.id, /*TODO card의 rate point gained 도 고려해야함*/card.point, "CARD").save();
-    })
-    .catch(function (e) {
-      console.error(e);
-    });
-
+  extracted(card);
   // accepted card에 average의 50% 범위 내의 점수를 준 사람에게 어드밴티지를 준다
   giveVoteAdvantage(card);
   // accepted card에 average의 50% 범위 외의 점수를 투표한 사람에게 페널티를 준다
@@ -101,15 +105,14 @@ function acceptOrReject(card) {
 
 agenda.define('finishVotePeriod', (job, done) => {
   let projectId = job.attrs.data.projectId;
-  console.log(`finishVotePeriod:${projectId}`);
+  console.log(`finishVotePeriod: ${projectId}`);
 
   Project.findOne({id: projectId})
     .then(function (project) {
-      // find in review cards
-      Card.findOne({projectId: project.id, state: CardState.IN_REVIEW})
+      Card.find({projectId: projectId, state: CardState.IN_REVIEW})
         .then(function (cards) {
-          if (cards === null) return;
-          cards.map(card => acceptOrReject(card));
+          if (cards !== null)
+            cards.map(card => acceptOrReject(card));
         })
         .catch(function (error) {
           console.error(error);

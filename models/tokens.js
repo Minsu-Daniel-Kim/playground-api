@@ -72,6 +72,7 @@ schema.methods.findOrCreateLedger = function (sourceId) {
 };
 
 schema.methods.stake = function (sourceId, amount, stakeType) {
+  // TODO validate total amount
   let ledger = this.findOrCreateLedger(sourceId);
   this.totalAmount -= amount;
   ledger.staked += amount;

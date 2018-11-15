@@ -41,6 +41,7 @@ schema.methods.add = function (id, point, type) {
     point: point,
     createdAt: new Date()
   });
+  return this;
 };
 
 let PointPool = mongoose.model('PointPool', schema);

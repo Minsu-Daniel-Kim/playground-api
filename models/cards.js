@@ -207,6 +207,7 @@ cardSchema.methods.rate = function (userId, point) {
     point: point,
     createdDate: new Date()
   });
+  return this;
 };
 
 const DELIMITER = "_";
