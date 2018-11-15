@@ -52,7 +52,7 @@ router.post('/projects/:id/approve', function (req, res) {
       project.qualifier = adminId;
       project.save();
       // TODO history
-      res.send({message: `Success to approve project: ${project}`});
+      res.send({message: `Success to approve project: ${projectId}`});
     })
     .catch(function (e) {
       console.error(e);

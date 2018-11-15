@@ -46,7 +46,7 @@ let cardSchema = new mongoose.Schema({
   // meta information
   createdDate: Date,    // card created time
   createdBy: String,  // card creator id
-  state: String,
+  state: String,        // BACKlOG, NOT_STARTED, IN_PROGRESS, IN_REVIEW, COMPLETE
   deleted: Boolean,
   history: []
 });

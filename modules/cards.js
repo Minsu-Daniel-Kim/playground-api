@@ -24,8 +24,10 @@ cards.listAll = function (req, res) {
 };
 
 cards.shorten = function (req, res) {
-  Card.findOne({id: req.params.id})
-    .then(card => exist(card, req.params.id))
+  let cardId = req.params.id;
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    // .then(card => validateVote(card, userId)) // TODO
     .then(function (card) {
       return res.send(card.shorten());
     })
@@ -33,20 +35,6 @@ cards.shorten = function (req, res) {
       console.error(err);
       return res.send({message: err});
     })
-};
-
-cards.detail = function (req, res) {
-  Card.findOne({id: req.params.id})
-    .then(card => exist(card, req.params.id))
-    .then(function (card) {
-      if (req.query.fields === 'all')
-        return res.send(card.all());
-      return res.send(card.detail())
-    })
-    .catch(function (err) {
-      console.error(err);
-      return res.send({message: err});
-    });
 };
 
 cards.update = function (req, res) {
@@ -58,17 +46,15 @@ cards.update = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMember(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       if (isNotEmpty(title))
         card.title = title;
       if (isNotEmpty(desc))
         card.description = desc;
 
-      // TODO: point 변경시 이미 assign된 경우는 처리가 어려우므로 일단 제외
-      // let point = req.body.label;
-      // if (isNotEmpty(point))
-      //   card.point = point;
-
+      // point 변경시 이미 assign된 경우는 처리가 어려우므로 일단 제외
+      // if (isNotEmpty(point) card.point = point;
       card.save();
       return res.send(card.detail())
     })
@@ -82,7 +68,6 @@ function isNotEmpty(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
-// TODO
 cards.addSubmission = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
@@ -91,8 +76,9 @@ cards.addSubmission = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isAssignee(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
-      if (isEmpty(req.body.url))
+      if (isEmpty(submissionUrl))
         return res.send(400, {message: 'Url is empty'});
 
       Submission.new(card.id, submissionUrl).save(function (err) {
@@ -162,10 +148,14 @@ cards.submit = function (req, res, next) {
   return updateCardState(req, res, 'submitted', isAssignee)
 };
 
-function updateCardState(req, res, action, checkAuth, afterUpdate) {
-  Card.findOne({id: req.params.id})
-    .then(card => exist(card, req.params.id))
-    .then(card => checkAuth(card, req.body.userId))
+function updateCardState(req, res, action, checkAuth, doAfterUpdate) {
+  let cardId = req.params.id;
+  let userId = req.body.userId;
+
+  Card.findOne({id: cardId})
+    .then(card => exist(card, cardId))
+    .then(card => checkAuth(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       fsm.goto(card.currentState());
       if (fsm.cannot(action)) {
@@ -178,8 +168,8 @@ function updateCardState(req, res, action, checkAuth, afterUpdate) {
       card.state = fsm.state;
       card.save(function (err, saved) {
         if (err) return res.send(500, {message: err});
-        if (afterUpdate !== undefined)
-          afterUpdate(card);
+        if (doAfterUpdate !== undefined)
+          doAfterUpdate(card);
         return res.send(saved.detail())
       })
     })
@@ -190,50 +180,16 @@ function updateCardState(req, res, action, checkAuth, afterUpdate) {
 }
 
 /**
- * FOR DEVELOPMENT
- * @param req
- * @param res
- * @param next
- */
-cards.reset = function (req, res, next) {
-  Card.findOne({id: req.params.id})
-    .then(card => exist(card, req.params.id))
-    .then(function (card) {
-      card.clear();
-      card.save(function (err, saved) {
-        if (err) return res.send(err);
-        return res.send(saved.detail())
-      })
-    })
-    .catch(function (err) {
-      console.error(err);
-      return res.send({message: err});
-    });
-};
-
-cards.resetAll = function (req, res, next) {
-  Card.find({state: {$in: [cardState.IN_PROGRESS, cardState.IN_REVIEW, cardState.IN_COMPLETE]}})
-    .then(function (cards) {
-      cards.map(card => {
-        card.clear();
-        card.save()
-      });
-      return res.send({message: `reset ${cards.length} cards`})
-    })
-    .catch(function (err) {
-      console.error(err);
-      return res.send({message: err});
-    });
-};
-
-/**
  * Add comment
  */
 cards.comment = function (req, res) {
   let cardId = req.params.id;
+  let userId = req.body.userId;
+
   Card.findOne({id: cardId})
-    .then(card => exist(card, req.params.id))
-    .then(card => isMember(card, req.body.userId))
+    .then(card => exist(card, cardId))
+    .then(card => isMember(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       card.addComment(req.body.title, req.body.content, req.body.userId, req.body.parentId);
       card.save(function (err) {
@@ -260,6 +216,7 @@ cards.rate = function (req, res) {
 
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
+    .then(card => isNotAssignee(card, userId))
     .then(card => isMember(card, userId))
     .then(function (card) {
       if (card.currentState() !== cardState.IN_REVIEW)
@@ -293,6 +250,7 @@ cards.approveComment = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
       if (comment.approved === true)
@@ -327,6 +285,7 @@ cards.cancelApprove = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
       if (comment.approved === false)
@@ -337,9 +296,8 @@ cards.cancelApprove = function (req, res) {
       card.save(function (err) {
         if (err) return res.send(err);
         return res.send({message: "success to cancel approve comment"})
-      })
-
-      // TODO sub point from user
+        return res.send({message: "success to cancel approval"})
+      });
     })
     .catch(function (err) {
       console.error(err);
@@ -358,6 +316,7 @@ cards.staking = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isAssignee(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       TokenPool.findOne({userId: userId, projectId: card.projectId})
         .then(function (tokens) {
@@ -382,6 +341,7 @@ cards.archive = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       card.deleted = true;
       card.save();
@@ -400,6 +360,7 @@ cards.unArchive = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
+    .then(card => validateVote(card, userId))
     .then(function (card) {
       card.deleted = false;
       card.save();
@@ -447,6 +408,15 @@ function isAssignee(card, userId) {
   })
 }
 
+function isNotAssignee(card, userId) {
+  return new Promise((resolve, reject) => {
+    if (card.assigneeId !== userId)
+      resolve(card);
+    else reject(`Assignee is not allowed: ${userId}`);
+  })
+}
+
+
 function exist(card, cardId) {
   return new Promise((resolve, reject) => {
     if (card === null || card === undefined)
@@ -454,5 +424,59 @@ function exist(card, cardId) {
     else resolve(card);
   });
 }
+
+function validateVote(card, userId) {
+  return new Promise((resolve, reject) => {
+    Card.find({projectId: card.projectId, state: cardState.IN_REVIEW})
+      .then(function (cards) {
+        let inReviewCards = cards.filter(card => card.assigneeId !== userId);
+        if (inReviewCards && inReviewCards.find(card => card.rates.find(rate => rate.userId === userId) === undefined))
+          reject(`Have to vote first: ${card.id}`);
+        else
+          resolve(card);
+      })
+      .catch(function (e) {
+        console.error(e);
+        reject(`Something went wrong`);
+      });
+  });
+}
+
+/**
+ * FOR DEVELOPMENT
+ * @param req
+ * @param res
+ * @param next
+ */
+cards.reset = function (req, res, next) {
+  Card.findOne({id: req.params.id})
+    .then(card => exist(card, req.params.id))
+    .then(function (card) {
+      card.clear();
+      card.save(function (err, saved) {
+        if (err) return res.send(err);
+        return res.send(saved.detail())
+      })
+    })
+    .catch(function (err) {
+      console.error(err);
+      return res.send({message: err});
+    });
+};
+
+cards.resetAll = function (req, res, next) {
+  Card.find({state: {$in: [cardState.IN_PROGRESS, cardState.IN_REVIEW, cardState.IN_COMPLETE]}})
+    .then(function (cards) {
+      cards.map(card => {
+        card.clear();
+        card.save()
+      });
+      return res.send({message: `reset ${cards.length} cards`})
+    })
+    .catch(function (err) {
+      console.error(err);
+      return res.send({message: err});
+    });
+};
 
 module.exports = cards;

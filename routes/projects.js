@@ -128,6 +128,8 @@ function citationDto(documents) {
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
+  let userId = "user1111"; //req.body.userId;
+
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
     .then(function (values) {
@@ -137,7 +139,10 @@ router.get('/:id/cards', function (req, res, next) {
         return res.send({message: `Can't find cards by: ${projectId}`});
       return res.send(cards.map(card => {
         let dto = card.shorten();
-        // dto.submissions = subs;
+        if (card.state === CardState.IN_REVIEW) {
+          let voted = card.rates.find(rate => rate.userId === userId);
+          dto.voted = (voted || false);
+        }
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
           return {
             id: e.id,
@@ -306,7 +311,7 @@ router.post('/:id/approve', function (req, res) {
   Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
-        notFound(req, res);
+        return notFound(req, res);
       if (candidate === undefined || candidate === null)
         return res.send(406, {message: 'candidate id is empty'});
       if (project.applied(candidate) !== true)
@@ -348,7 +353,8 @@ router.post('/:id/close-enrollment', function (req, res) {
   // TODO check auth
   Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
-      if (project === undefined || project === null) notFound(req, res);
+      if (project === undefined || project === null)
+        return notFound(req, res);
       if (project.state !== "OPEN")
         return res.status(406).send({message: `Cannot start project with state:${project.state}`});
       agenda.now('closeEnrollment', {projectId: projectId});
@@ -369,7 +375,7 @@ router.post('/:id/publish', function (req, res) {
   Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
-        notFound(req, res);
+        return notFound(req, res);
       if (project.state !== "TEMP")
         return res.status(406).send({message: `Cannot publish project with state:${project.state}`});
 
@@ -413,7 +419,7 @@ router.get('/:id/rank', function (req, res) {
   Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
-        notFound(req, res);
+        return notFound(req, res);
 
       let memberIds = project.students().map(e => e.userId);
       Card.find({assigneeId: {$in: memberIds}, state: CardState.COMPLETE})
