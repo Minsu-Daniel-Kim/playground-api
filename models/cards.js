@@ -88,6 +88,13 @@ cardSchema.methods.shorten = function () {
     metadata: {
       title: this.title,
       description: this.description,
+      rates: this.rates.map(rate => {
+        return {
+          userId: rate.userId,
+          point: rate.point,
+          createdAt: rate.createdDate
+        }
+      }),
       comments: this.comments.map(comment => {
         return {
           id: comment.id,
