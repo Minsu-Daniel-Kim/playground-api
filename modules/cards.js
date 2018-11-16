@@ -360,8 +360,8 @@ cards.archive = function (req, res) {
 
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
-    .then(card => isMentor(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => isMentor(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       card.deleted = true;
       card.save();
@@ -379,8 +379,8 @@ cards.unArchive = function (req, res) {
 
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
-    .then(card => isMentor(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => isMentor(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       card.deleted = false;
       card.save();
