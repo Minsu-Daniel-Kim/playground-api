@@ -4,11 +4,15 @@ let Submission = require('../models/submissions');
 let Project = require('../models/projects');
 let cardState = require('../models/card_state');
 let TokenPool = require('../models/tokens');
+let PointPool = require('../models/points');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
 const mailer = require('../jobs/mails/mailer2');
 require('../jobs/slashJob');
 require('../jobs/notiExpireJob');
+
+
+const COMMENT_APPROVE_POINT = 1;
 
 let cards = {};
 
@@ -46,7 +50,7 @@ cards.update = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMember(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       if (isNotEmpty(title))
         card.title = title;
@@ -68,6 +72,10 @@ function isNotEmpty(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
+function isEmpty(str) {
+  return str === undefined || str === null || str === '';
+}
+
 cards.addSubmission = function (req, res) {
   let cardId = req.params.id;
   let userId = req.body.userId;
@@ -76,7 +84,7 @@ cards.addSubmission = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isAssignee(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       if (isEmpty(submissionUrl))
         return res.send(400, {message: 'Url is empty'});
@@ -91,10 +99,6 @@ cards.addSubmission = function (req, res) {
       return res.send(400, {message: err});
     })
 };
-
-function isEmpty(str) {
-  return str === undefined || str === null || str === '';
-}
 
 cards.ready = function (req, res) {
   return updateCardState(req, res, 'ready', isMentor);
@@ -174,7 +178,7 @@ function updateCardState(req, res, action, checkAuth, doAfterUpdate) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => checkAuth(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(card => assignable(card, userId, action, stakingAmount))
     .then(function (card) {
       fsm.goto(card.currentState());
@@ -209,7 +213,7 @@ cards.comment = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMember(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       card.addComment(req.body.title, req.body.content, req.body.userId, req.body.parentId);
       card.save(function (e) {
@@ -288,7 +292,7 @@ cards.approveComment = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
       if (comment.approved === true)
@@ -323,7 +327,7 @@ cards.cancelApprove = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isMentor(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       let comment = card.comments.find(comment => comment.id === commentId);
       if (comment.approved === false)
@@ -354,7 +358,7 @@ cards.staking = function (req, res) {
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => isAssignee(card, userId))
-    .then(card => validateVote(card, userId))
+    // .then(card => validateVote(card, userId))
     .then(function (card) {
       TokenPool.findOne({userId: userId, projectId: card.projectId})
         .then(function (tokens) {
