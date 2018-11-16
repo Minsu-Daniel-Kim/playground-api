@@ -131,7 +131,8 @@ function citationDto(documents) {
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
-  let userId = "user1111"; //req.body.userId;
+  let userId = req.header('userId');
+  console.log(userId)
 
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
