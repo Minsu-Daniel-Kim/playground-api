@@ -28,6 +28,8 @@ agenda.define('slash', (job, done) => {
       }
 
       // slashCount 는 card의 point와 같음
+      if (card.slashCount === undefined)
+        card.slashCount = card.point;
       card.slashCount -= SLASH_AMOUNT;
       slash(card, SLASH_AMOUNT);
 

@@ -36,6 +36,7 @@ let fsm = new StateMachine({
 
       card.assigneeId = params.userId;
       card.staking = params.staking;
+      card.slashCount = params.point;
       // card.ttl = card.point * MS_PER_HOUR;
       card.startedDate = new Date();
       card.dueDate = new Date(Date.now() + (card.point * MS_PER_HOUR));
