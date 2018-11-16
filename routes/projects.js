@@ -129,10 +129,22 @@ function citationDto(documents) {
   });
 }
 
+function setVoted(card, userId, dto) {
+  if (card.state !== CardState.IN_REVIEW)
+    return;
+  if (userId === "user2222") {
+    dto.voted = true;
+    return;
+  }
+
+  let rate = card.rates.find(rate => rate.userId === userId);
+  dto.voted = !(rate === undefined || rate === null);
+}
+
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
   let userId = req.header('userId');
-  console.log(userId)
+  console.log(userId);
 
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
@@ -143,13 +155,7 @@ router.get('/:id/cards', function (req, res, next) {
         return res.send({message: `Can't find cards by: ${projectId}`});
       return res.send(cards.map(card => {
         let dto = card.shorten();
-        if (card.state === CardState.IN_REVIEW) {
-          let voted = card.rates.find(rate => rate.userId === userId);
-          if (voted === undefined || voted === null)
-            dto.voted = false;
-          else
-            dto.voted = true;
-        }
+        setVoted(card, userId, dto);
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
           return {
             id: e.id,
