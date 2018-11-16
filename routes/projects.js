@@ -145,7 +145,10 @@ router.get('/:id/cards', function (req, res, next) {
         let dto = card.shorten();
         if (card.state === CardState.IN_REVIEW) {
           let voted = card.rates.find(rate => rate.userId === userId);
-          dto.voted = (voted || false);
+          if (voted === undefined || voted === null)
+            dto.voted = false;
+          else
+            dto.voted = true;
         }
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
           return {
