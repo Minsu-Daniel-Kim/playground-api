@@ -60,7 +60,7 @@ cards.update = function (req, res) {
     })
     .catch(function (err) {
       console.error(err);
-      return res.send({message: err});
+      return res.send(400, {message: err});
     });
 };
 
@@ -82,13 +82,13 @@ cards.addSubmission = function (req, res) {
         return res.send(400, {message: 'Url is empty'});
 
       Submission.new(card.id, submissionUrl).save(function (err) {
-        if (err) return res.send(err);
+        if (err) return res.send(500, {message: e});
         return res.send({message: "Success"});
       });
     })
     .catch(function (err) {
       console.error(err);
-      return res.send({message: err});
+      return res.send(400, {message: err});
     })
 };
 
@@ -144,7 +144,7 @@ cards.giveUp = function (req, res) {
   });
 };
 
-cards.submit = function (req, res, next) {
+cards.submit = function (req, res) {
   return updateCardState(req, res, 'submitted', isAssignee)
 };
 
@@ -223,6 +223,24 @@ cards.comment = function (req, res) {
     });
 };
 
+const VOTING_STAKE_AMOUNT = 2;
+const STAKE_TYPE = "VOTE";
+
+function stakeForVote(projectId, userId) {
+  Project.findOne({id: projectId})
+    .then(function (project) {
+      let now = new Date();
+      let votePeriod = project.votingPeriods.find(period => period.startAt <= now && now < period.endAt);
+      TokenPool.findOne({userId: userId, projectId: projectId})
+        .then(function (tokens) {
+          tokens.stake(votePeriod.id, VOTING_STAKE_AMOUNT, STAKE_TYPE).save()
+        })
+        .catch(function (e) {
+          console.error(e);
+        });
+    });
+}
+
 /**
  * Rate card in voting period
  * require: MEMBER, TPM, TA
@@ -240,19 +258,19 @@ cards.rate = function (req, res) {
     .then(card => isMember(card, userId))
     .then(function (card) {
       if (card.currentState() !== cardState.IN_REVIEW)
-        return res.send({message: `Can't rate card state: ${card.currentState()}`});
-      if (card.hasRated(userId))
-        return res.send({message: `already rated by ${userId}`});
+        return res.send(400, {message: `Can't rate card state: ${card.currentState()}`});
+      // if (card.hasRated(userId))
+      //   return res.send(400, {message: `already rated by ${userId}`});
 
-      card.rate(userId, point);
-      card.save(function (err) {
-        if (err) return res.send(err);
+      stakeForVote(card.projectId, userId);
+      card.rate(userId, point).save(function (e) {
+        if (e) return res.send(500, {message: e});
         return res.send({message: "success to rate card"})
       })
     })
-    .catch(function (err) {
-      console.error(err);
-      return res.send(400, {message: err})
+    .catch(function (e) {
+      console.error(e);
+      return res.send(400, {message: `Something went wrong: ${e.toString()}`})
     })
 };
 
@@ -278,8 +296,8 @@ cards.approveComment = function (req, res) {
 
       comment.approved = true;
       comment.approver = userId;
-      card.save(function (err) {
-        if (err) return res.send(err);
+      card.save(function (e) {
+        if (e) return res.send(500, {message: e});
         return res.send({message: "success to approve comment"})
       });
 
@@ -287,7 +305,7 @@ cards.approveComment = function (req, res) {
     })
     .catch(function (err) {
       console.error(err);
-      return res.send({message: err});
+      return res.send(400, {message: err});
     })
 };
 
@@ -321,7 +339,7 @@ cards.cancelApprove = function (req, res) {
     })
     .catch(function (err) {
       console.error(err);
-      return res.send({message: err});
+      return res.send(400, {message: err});
     });
 };
 
