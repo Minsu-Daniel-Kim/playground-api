@@ -3,6 +3,7 @@ let Card = require('../models/cards');
 let CardState = require('../models/card_state');
 let User = require('../models/users');
 let StakingPool = require('../models/stakings');
+let TokenPool = require('../models/tokens');
 let Submission = require('../models/submissions');
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
@@ -33,7 +34,9 @@ router.post('/new', function (req, res) {
   project.startAt = req.body.startAt;
   project.endAt = req.body.endAt;
   project.sprintCount = req.body.sprintCount;
-  project.votingPeriods = [];
+  project.votingPeriods = [
+    // TODO
+  ];
 
   project.save()
     .then(function (saved) {
@@ -392,42 +395,97 @@ router.post('/:id/publish', function (req, res) {
     })
 });
 
-function compare(a, b) {
-  if (a.point < b.point)
+function descOrderCompare(a, b) {
+  if (a.value < b.value)
     return 1;
-  if (a.point > b.point)
+  if (a.value > b.value)
     return -1;
   return 0;
 }
 
-function rankByPoint(cards, users) {
-  let points = new Map(), ranks = [];
-  cards.map(card => points.set(card.assigneeId, card.point + (points.get(card.assigneeId) || 0)));
-  let rank = 1;
+function setRank(users, valueList) {
+  let ranks = [];
   Array.from(users).map(user => ranks.push({
-    rank: rank++,
     id: user.id,
     name: user.nickname,
-    point: (points.get(user.id) || 0)
+    value: (valueList.get(user.id) || 0)
   }));
-  ranks.sort(compare);
+  ranks.sort(descOrderCompare);
+  let rank = 1;
+  ranks.map(e => e["rank"] = rank++);
   return ranks;
+}
+
+function rankByPoint(cards, users) {
+  let points = new Map();
+  cards.map(card => points.set(card.assigneeId, card.point + (points.get(card.assigneeId) || 0)));
+  return setRank(users, points);
+}
+
+function rankByCardCount(cards, users) {
+  let counts = new Map();
+  cards.map(card => counts.set(card.assigneeId, 1 + (counts.get(card.assigneeId) || 0)));
+  return setRank(users, counts);
+}
+
+function rankByToken(userIds, project) {
+  TokenPool.find({userId: {$in: userIds}, projectId: project.id})
+    .then(function (pools) {
+      User.find({id: {$in: userIds}})
+        .then(function (users) {
+          let tokens = new Map();
+          pools.map(token => tokens.set(token.userId, token.totalAmount + (tokens.get(token.userId) || 0)));
+          let a = setRank(users, tokens);
+          return a;
+        })
+        .catch(function (error) {
+          console.error(error);
+        })
+    })
+    .catch(function (error) {
+      console.error(error);
+    })
 }
 
 router.get('/:id/rank', function (req, res) {
   let projectId = req.params.id;
+  let orderby = (req.query.orderby || 'point');
+
   Project.findOne({id: projectId, qualified: true})
     .then(function (project) {
       if (project === undefined || project === null)
         return notFound(req, res);
 
       let memberIds = project.students().map(e => e.userId);
+
+      if (orderby === 'token') {
+        TokenPool.find({userId: {$in: memberIds}, projectId: project.id})
+          .then(function (pools) {
+            User.find({id: {$in: memberIds}})
+              .then(function (users) {
+                let tokens = new Map();
+                pools.map(token => tokens.set(token.userId, token.totalAmount + (tokens.get(token.userId) || 0)));
+                return res.send(setRank(users, tokens));
+              })
+              .catch(function (error) {
+                console.error(error);
+                return res.send(500, {message: `Something went wrong`});
+              });
+          })
+          .catch(function (error) {
+            console.error(error);
+            return res.send(500, {message: `Something went wrong`});
+          });
+      }
+
       Card.find({assigneeId: {$in: memberIds}, state: CardState.COMPLETE})
         .then(function (cards) {
           User.find({id: {$in: memberIds}})
             .then(function (users) {
-              let temp = rankByPoint(cards, users);
-              return res.send(temp);
+              if (orderby === 'point')
+                return res.send(rankByPoint(cards, users));
+              else if (orderby === 'card')
+                return res.send(rankByCardCount(cards, users));
             })
             .catch(function (error) {
               console.error(error);
