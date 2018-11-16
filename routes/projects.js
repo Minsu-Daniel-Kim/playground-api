@@ -143,8 +143,8 @@ function setVoted(card, userId, dto) {
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
-  let userId = req.header('userId');
-  console.log(userId);
+  let userId = (req.header('userId') || 'user2222');
+  console.log(`${req.header('userId')} ${userId}`);
 
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
