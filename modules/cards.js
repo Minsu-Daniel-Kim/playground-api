@@ -148,14 +148,34 @@ cards.submit = function (req, res, next) {
   return updateCardState(req, res, 'submitted', isAssignee)
 };
 
+function assignable(card, userId, action, stakingAmount) {
+  return new Promise((resolve, reject) => {
+    if (action !== 'assigned')
+      resolve(card);
+
+    TokenPool.findOne({userId: userId, projectId: card.projectId})
+      .then(function (tokens) {
+        if (tokens.totalAmount < stakingAmount)
+          reject(`Not enough token total:${tokens.totalAmount} staking: ${stakingAmount}`);
+        else resolve(card);
+      })
+      .catch(function (e) {
+        console.error(e);
+        reject(`Something went wrong: ${e.toString()}`);
+      });
+  });
+}
+
 function updateCardState(req, res, action, checkAuth, doAfterUpdate) {
   let cardId = req.params.id;
   let userId = req.body.userId;
+  let stakingAmount = req.body.staking;
 
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     .then(card => checkAuth(card, userId))
     .then(card => validateVote(card, userId))
+    .then(card => assignable(card, userId, action, stakingAmount))
     .then(function (card) {
       fsm.goto(card.currentState());
       if (fsm.cannot(action)) {
@@ -192,14 +212,14 @@ cards.comment = function (req, res) {
     .then(card => validateVote(card, userId))
     .then(function (card) {
       card.addComment(req.body.title, req.body.content, req.body.userId, req.body.parentId);
-      card.save(function (err) {
-        if (err) return res.send(err);
+      card.save(function (e) {
+        if (e) return res.send(500, {message: e});
         return res.send({message: "success to register comment"})
       })
     })
-    .catch(function (error) {
-      console.log(error);
-      return res.send({message: error});
+    .catch(function (e) {
+      console.log(e);
+      return res.send(400, {message: e});
     });
 };
 
