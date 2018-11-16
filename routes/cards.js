@@ -48,7 +48,7 @@ router.post('/:id/comments/:commentId/approve', function (req, res, next) {
   return cardModule.approveComment(req, res);
 });
 
-router.post('/:id/comments/:commentId/cancel-approve', function (req, res, next) {
+router.post('/:id/comments/:commentId/disapprove', function (req, res, next) {
   return cardModule.cancelApprove(req, res);
 });
 
