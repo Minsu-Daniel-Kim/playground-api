@@ -266,7 +266,7 @@ cards.rate = function (req, res) {
       // if (card.hasRated(userId))
       //   return res.send(400, {message: `already rated by ${userId}`});
 
-      stakeForVote(card.projectId, userId);
+      // stakeForVote(card.projectId, userId);
       card.rate(userId, point).save(function (e) {
         if (e) return res.send(500, {message: e});
         return res.send({message: "success to rate card"})
@@ -491,7 +491,7 @@ function validateVote(card, userId) {
     Card.find({projectId: card.projectId, state: cardState.IN_REVIEW})
       .then(function (cards) {
         let inReviewCards = cards.filter(card => card.assigneeId !== userId);
-        if (inReviewCards && inReviewCards.find(card => card.rates.find(rate => rate.userId === userId) === undefined))
+        if (inReviewCards.length > 0 && inReviewCards.find(card => card.rates.find(rate => rate.userId === userId) === undefined))
           reject(`Have to vote first: ${card.id}`);
         else
           resolve(card);

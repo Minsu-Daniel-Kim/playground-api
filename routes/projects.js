@@ -132,10 +132,10 @@ function citationDto(documents) {
 function setVoted(card, userId, dto) {
   if (card.state !== CardState.IN_REVIEW)
     return;
-  if (userId === "user2222") {
-    dto.voted = true;
-    return;
-  }
+  // if (userId === "user2222") {
+  //   dto.voted = true;
+  //   return;
+  // }
 
   let rate = card.rates.find(rate => rate.userId === userId);
   dto.voted = !(rate === undefined || rate === null);
