@@ -105,4 +105,20 @@ router.get('/cards/clear-rate', function (req, res) {
     });
 });
 
+router.get('/cards/:id/clear-comment', function (req, res) {
+  let cardId = req.params.id;
+  Card.findOne({id: cardId})
+    .then(function (card) {
+      if (!card)
+        return res.send(404, {message: `Card not exist`});
+      card.comments = [];
+      card.save();
+      return res.send({message: 'Success'});
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
+});
+
 module.exports = router;
