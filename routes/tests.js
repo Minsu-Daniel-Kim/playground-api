@@ -1,3 +1,7 @@
+let StakingPool = require("../models/stakings");
+let TokenPool = require("../models/tokens");
+let PointPool = require("../models/points");
+let Submission = require("../models/submissions");
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
 require('../jobs/projects/project_start');
@@ -36,6 +40,50 @@ router.get('/projects/:id/vote/:votingPeriodId/finish', function (req, res) {
 
   agenda.now('finishVotePeriod', {projectId: projectId, votingPeriodId: votingPeriodId});
   return res.send({message: `Finished voting period: ${projectId}, ${votingPeriodId}`});
+});
+
+router.get('/stakings', function (req, res) {
+  StakingPool.find({})
+    .then(function (stakings) {
+      return res.send(stakings);
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
+});
+
+router.get('/tokens', function (req, res) {
+  TokenPool.find({})
+    .then(function (tokens) {
+      return res.send(tokens);
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
+});
+
+router.get('/points', function (req, res) {
+  PointPool.find({})
+    .then(function (points) {
+      return res.send(points);
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
+});
+
+router.get('/submissions', function (req, res) {
+  Submission.find({})
+    .then(function (submissions) {
+      return res.send(submissions);
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
 });
 
 module.exports = router;
