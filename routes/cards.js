@@ -55,6 +55,7 @@ router.post('/:id/comments/:commentId/approve', function (req, res, next) {
 });
 
 router.post('/:id/comments/:commentId/disapprove', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.cancelApprove(req, res);
 });
 
@@ -62,6 +63,7 @@ router.post('/:id/comments/:commentId/disapprove', function (req, res, next) {
  * card의 데드라인이 얼마 남지 않은 경우 추가 staking을 한다.
  */
 router.post('/:id/staking', function (req, res) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.staking(req, res);
 });
 

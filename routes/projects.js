@@ -131,8 +131,6 @@ function citationDto(documents) {
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
-  let userId = (req.header('userId') || 'user2222');
-  console.log(`${req.header('userId')} ${userId}`);
 
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
@@ -143,7 +141,6 @@ router.get('/:id/cards', function (req, res, next) {
         return res.send({message: `Can't find cards by: ${projectId}`});
       return res.send(cards.map(card => {
         let dto = card.shorten();
-        // setVoted(card, userId, dto);
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
           return {
             id: e.id,
@@ -504,6 +501,7 @@ router.get('/:id/rank', function (req, res) {
 router.post('/:id/vote-list', function (req, res) {
   let projectId = req.params.id;
   let userId = req.body.userId;
+  console.log(`${projectId} userId: ${userId}`);
 
   Card.find({projectId: projectId, state: CardState.IN_REVIEW})
     .then(function (cards) {
