@@ -135,22 +135,44 @@ router.get('/:id/cards', function (req, res, next) {
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
     .then(cards => getSubmissions(cards))
     .then(function (values) {
-      let cards = values.cards;
-      let subs = values.subs;
-      if (cards === null)
-        return res.send({message: `Can't find cards by: ${projectId}`});
-      return res.send(cards.map(card => {
-        let dto = card.shorten();
-        dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
-          return {
-            id: e.id,
-            url: e.url,
-            citations: citationDto(e.citations),
-            cited: citationDto(e.cited)
-          }
-        });
-        return dto;
-      }));
+      return convertToDto(values, res);
+    })
+    .catch(function (error) {
+      console.error(error);
+      res.status(500).send({message: "Something went wrong"});
+    });
+});
+
+
+function convertToDto(values, res) {
+  let cards = values.cards;
+  let subs = values.subs;
+  if (cards === null)
+    return res.send({message: `Can't find cards by: ${projectId}`});
+  return res.send(cards.map(card => {
+    let dto = card.shorten();
+    dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
+      return {
+        id: e.id,
+        url: e.url,
+        citations: citationDto(e.citations),
+        cited: citationDto(e.cited)
+      }
+    });
+    return dto;
+  }));
+}
+
+router.get('/:id/cards-by-state', function (req, res, next) {
+  let projectId = req.params.id;
+  let state = req.query.state;
+  console.log(state);
+  state = (state || CardState.IN_REVIEW);
+
+  Card.find({projectId: projectId, state: state, deleted: {$in: [null, false]}})
+    .then(cards => getSubmissions(cards))
+    .then(function (values) {
+      return convertToDto(values, res);
     })
     .catch(function (error) {
       console.error(error);
