@@ -27,13 +27,46 @@ cards.listAll = function (req, res) {
     })
 };
 
+
+let getSubmissions = function (card) {
+  return new Promise((resolve, reject) => {
+    Submission.find({cardId: card.id})
+      .then(function (subs) {
+        return resolve({card: card, subs: subs});
+      })
+      .catch(function (e) {
+        return reject(error);
+      });
+  });
+};
+
+function citationDto(documents) {
+  return documents.map(doc => {
+    return {
+      submissionId: doc.sourceId,
+      cardId: doc.cardId,
+      date: doc.createdAt
+    }
+  });
+}
+
 cards.shorten = function (req, res) {
   let cardId = req.params.id;
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
     // .then(card => validateVote(card, userId)) // TODO
-    .then(function (card) {
-      return res.send(card.shorten());
+    .then(getSubmissions)
+    .then(function (value) {
+      let dto = value.card.shorten();
+      dto.submissions = value.subs.map(e => {
+        return {
+          id: e.id,
+          url: e.url,
+          citations: citationDto(e.citations),
+          cited: citationDto(e.cited)
+        }
+      });
+      return res.send(dto);
     })
     .catch(function (err) {
       console.error(err);
