@@ -3,6 +3,7 @@ const common = require('../common');
 const fsm = require('../../tasks/cardstate');
 const Project = require('../../models/projects');
 const Card = require('../../models/cards');
+const SubmissionPool = require('../../models/submissions');
 const TokenPool = require('../../models/tokens');
 const PointPool = require('../../models/points');
 const CardState = require('../../models/card_state');
@@ -14,6 +15,8 @@ const BOUNDARY_SCORE = 6;
 const RANGE = .5;
 const PENALTY_AMOUNT = 1;
 const ADVANTAGE_AMOUNT = 1;
+const CITE_ADVANTAGE_PERCENT = .1;
+const CITED_ADVANTAGE_PERCENT = .1;
 
 function getAveragePoint(rates) {
   let sum = rates.map(rate => rate.point).reduce((total, num) => {
@@ -44,7 +47,7 @@ function processToken(card, funcName, type) {
 function processTokens(userIds, card, funcName, amount) {
   TokenPool.find({userId: {$in: userIds}, projectId: card.projectId})
     .then(function (tokens) {
-      tokens.map(token => token[funcName](card.id, amount)).save();
+      tokens.map(token => token[funcName](card.id, amount).save());
     })
     .catch(function (e) {
       console.error(e);
@@ -65,11 +68,66 @@ function giveVotePenalty(card) {
   processTokens(outRated, card, 'penalty', PENALTY_AMOUNT);
 }
 
-function extracted(card) {
+function givePointToAssignee(card) {
   PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
     .then(function (points) {
       /*TODO card의 rate point gained 도 고려해야함*/
       points.add(card.id, card.point, "CARD").save();
+    })
+    .catch(function (e) {
+      console.error(e);
+    });
+}
+
+let countCited = function (xs) {
+  return xs.reduce(function (rv, x) {
+    rv[x] = (rv[x] || 0) + 1;
+    return rv;
+  }, {});
+};
+
+let toMap = function (xs, key) {
+  return xs.reduce(function (rv, x) {
+    rv[x[key]] = x;
+    return rv;
+  }, {});
+};
+
+
+function giveCiteAdvantage(card) {
+  SubmissionPool.find({cardId: card.id, userId: card.assigneeId})
+    .then(function (submissions) {
+      if (submissions === undefined)
+        return;
+
+      submissions.map(submission => {
+        PointPool.findOne({userId: card.assigneeId, projectId: card.projectId})
+          .then(function (point) {
+            point.add(submission.id, card.point * CITE_ADVANTAGE_PERCENT, "CITE").save();
+          })
+          .catch(function (e) {
+            console.error(e);
+          });
+      });
+
+      let submissionIds = [];
+      submissions.map(e => e.citations.map(cite => submissionIds.push(cite.sourceId)));
+      let citedCountMap = countCited(submissionIds);
+
+      SubmissionPool.find({id: {$in: submissionIds}})
+        .then(function (submissions) {
+          PointPool.find({userId: {$in: submissions.map(e => e.userId)}, projectId: card.projectId})
+            .then(function (points) {
+              let pointMap = toMap(points, 'userId');
+              submissions.map(submission => {
+                let gained = citedCountMap[submission.id] * card.point * CITED_ADVANTAGE_PERCENT;
+                pointMap[submission.userId].add(submission.id, gained, "CITED").save();
+              });
+            })
+            .catch(function (e) {
+              console.error(e);
+            });
+        });
     })
     .catch(function (e) {
       console.error(e);
@@ -81,7 +139,11 @@ function accept(card) {
   processToken(card, 'returnStake', "ACCEPTED");
 
   // accepted card 작업자에게 포인트를 준다
-  extracted(card);
+  givePointToAssignee(card);
+
+  // card가 cite 한 submission owner 들에게도 포인트 제공
+  giveCiteAdvantage(card);
+
   // accepted card에 average의 50% 범위 내의 점수를 준 사람에게 어드밴티지를 준다
   giveVoteAdvantage(card);
   // accepted card에 average의 50% 범위 외의 점수를 투표한 사람에게 페널티를 준다
