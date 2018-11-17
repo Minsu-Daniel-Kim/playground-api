@@ -5,6 +5,7 @@ let User = require('../models/users');
 let StakingPool = require('../models/stakings');
 let TokenPool = require('../models/tokens');
 let Submission = require('../models/submissions');
+let util = require('../modules/util');
 let agenda = require('../jobs/agenda');
 require('../jobs/projects/enrollment_close');
 require('../jobs/projects/project_start');
@@ -119,21 +120,57 @@ let getSubmissions = function (cards) {
   });
 };
 
-function citationDto(documents) {
+function getCitations(args) {
+  // console.log('getCitations',cards, subs);
+  let subIds = args.subs.map(sub => sub.citations.map(citation => citation.sourceId));
+  return new Promise((resolve, reject) => {
+    Submission.find({id: {$in: subIds}})
+      .then(function (citedSubs) {
+        return resolve({cards: args.cards, subs: args.subs, cited: citedSubs});
+      })
+      .catch(function (e) {
+        return reject(error);
+      });
+  });
+}
+
+function citationDto(documents, citedSubsMap) {
   return documents.map(doc => {
     return {
       submissionId: doc.sourceId,
       cardId: doc.cardId,
-      date: doc.createdAt
+      date: doc.createdAt,
+      url: (citedSubsMap[doc.sourceId] || {}).url
     }
   });
+}
+
+function convertToDto(values, res) {
+  let cards = values.cards;
+  let subs = values.subs;
+  let citationsById = util.toMap(values.cited, 'id');
+  if (cards === null)
+    return res.send({message: `Can't find cards`});
+  return res.send(cards.map(card => {
+    let dto = card.shorten();
+    dto.metadata.submissions = subs.filter(e => e.cardId === card.id).map(e => {
+      return {
+        id: e.id,
+        url: e.url,
+        citations: citationDto(e.citations, citationsById),
+        cited: citationDto(e.cited, {})
+      }
+    });
+    return dto;
+  }));
 }
 
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
 
   Card.find({projectId: projectId, deleted: {$in: [null, false]}})
-    .then(cards => getSubmissions(cards))
+    .then(getSubmissions)
+    .then(getCitations)
     .then(function (values) {
       return convertToDto(values, res);
     })
@@ -143,26 +180,6 @@ router.get('/:id/cards', function (req, res, next) {
     });
 });
 
-
-function convertToDto(values, res) {
-  let cards = values.cards;
-  let subs = values.subs;
-  if (cards === null)
-    return res.send({message: `Can't find cards by: ${projectId}`});
-  return res.send(cards.map(card => {
-    let dto = card.shorten();
-    dto.metadata.submissions = subs.filter(e => e.cardId === card.id).map(e => {
-      return {
-        id: e.id,
-        url: e.url,
-        citations: citationDto(e.citations),
-        cited: citationDto(e.cited)
-      }
-    });
-    return dto;
-  }));
-}
-
 router.get('/:id/cards-by-state', function (req, res, next) {
   let projectId = req.params.id;
   let state = req.query.state;
@@ -170,7 +187,8 @@ router.get('/:id/cards-by-state', function (req, res, next) {
   state = (state || CardState.IN_REVIEW);
 
   Card.find({projectId: projectId, state: state, deleted: {$in: [null, false]}})
-    .then(cards => getSubmissions(cards))
+    .then(getSubmissions)
+    .then(getCitations)
     .then(function (values) {
       return convertToDto(values, res);
     })
