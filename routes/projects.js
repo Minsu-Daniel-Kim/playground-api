@@ -129,18 +129,6 @@ function citationDto(documents) {
   });
 }
 
-function setVoted(card, userId, dto) {
-  if (card.state !== CardState.IN_REVIEW)
-    return;
-  // if (userId === "user2222") {
-  //   dto.voted = true;
-  //   return;
-  // }
-
-  let rate = card.rates.find(rate => rate.userId === userId);
-  dto.voted = !(rate === undefined || rate === null);
-}
-
 router.get('/:id/cards', function (req, res, next) {
   let projectId = req.params.id;
   let userId = (req.header('userId') || 'user2222');
@@ -155,7 +143,7 @@ router.get('/:id/cards', function (req, res, next) {
         return res.send({message: `Can't find cards by: ${projectId}`});
       return res.send(cards.map(card => {
         let dto = card.shorten();
-        setVoted(card, userId, dto);
+        // setVoted(card, userId, dto);
         dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
           return {
             id: e.id,
@@ -510,6 +498,25 @@ router.get('/:id/rank', function (req, res) {
     .catch(function (error) {
       console.error(error);
       return res.send(500, {message: `Something went wrong`});
+    });
+});
+
+router.post('/:id/vote-list', function (req, res) {
+  let projectId = req.params.id;
+  let userId = req.body.userId;
+
+  Card.find({projectId: projectId, state: CardState.IN_REVIEW})
+    .then(function (cards) {
+      if (cards === null || cards === undefined)
+        return res.send([]);
+      let needToVoteCards = cards.filter(card => card.rates.find(rate => rate.userId === userId) === undefined);
+      return res.send(needToVoteCards.map(card => {
+        return {id: card.id, title: card.title};
+      }));
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: 'Something went wrong'});
     });
 });
 

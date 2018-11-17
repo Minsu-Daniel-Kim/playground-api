@@ -25,26 +25,32 @@ router.post('/:id/ready', function (req, res, next) {
 });
 
 router.post('/:id/assign', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.assign(req, res);
 });
 
 router.post('/:id/giveup', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.giveUp(req, res);
 });
 
 router.post('/:id/submit', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.submit(req, res);
 });
 
 router.post('/:id/comment', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.comment(req, res);
 });
 
 router.post('/:id/rate', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.rate(req, res);
 });
 
 router.post('/:id/comments/:commentId/approve', function (req, res, next) {
+  console.log(`${req.params.id} userId: ${req.body.userId}`);
   return cardModule.approveComment(req, res);
 });
 
