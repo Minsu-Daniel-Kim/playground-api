@@ -60,7 +60,7 @@ cards.update = function (req, res) {
       // point 변경시 이미 assign된 경우는 처리가 어려우므로 일단 제외
       // if (isNotEmpty(point) card.point = point;
       card.save();
-      return res.send(card.detail())
+      return res.send(card.shorten())
     })
     .catch(function (err) {
       console.error(err);
@@ -194,7 +194,7 @@ function updateCardState(req, res, action, checkAuth, doAfterUpdate) {
         if (err) return res.send(500, {message: err});
         if (doAfterUpdate !== undefined)
           doAfterUpdate(card);
-        return res.send(saved.detail())
+        return res.send(saved.shorten())
       })
     })
     .catch(function (error) {
