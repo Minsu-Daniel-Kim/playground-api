@@ -36,8 +36,8 @@ let fsm = new StateMachine({
 
       card.assigneeId = params.userId;
       card.staking = params.staking;
-      card.slashCount = params.point;
-      // card.ttl = card.point * MS_PER_HOUR;
+      card.point = params.staking; // todo temp for dev
+      card.slashCount = card.point;
       card.startedDate = new Date();
       card.dueDate = new Date(Date.now() + (card.point * MS_PER_HOUR));
       // TODO add history
@@ -51,11 +51,6 @@ let fsm = new StateMachine({
     },
     onAccepted: function (lifecycle, card, params) {
       console.log('onAccepted');
-      // PointPool.findOne({projectId: card.projectId, userId: card.assigneeId})
-      //   .then(pointPool => addPoint(pointPool, card))
-      //   .catch(function (e) {
-      //     console.error(e);
-      //   });
     },
     onRejected: function (lifecycle, card, params) {
       console.log('onRejected');
