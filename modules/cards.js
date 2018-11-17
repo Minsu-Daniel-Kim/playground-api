@@ -257,7 +257,7 @@ cards.rate = function (req, res) {
 
   Card.findOne({id: cardId})
     .then(card => exist(card, cardId))
-    .then(card => isNotAssignee(card, userId))
+    // .then(card => isNotAssignee(card, userId))
     .then(card => isMember(card, userId))
     .then(function (card) {
       if (card.currentState() !== cardState.IN_REVIEW)
