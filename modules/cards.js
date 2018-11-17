@@ -56,9 +56,8 @@ cards.update = function (req, res) {
         card.title = title;
       if (isNotEmpty(desc))
         card.description = desc;
-
       // point 변경시 이미 assign된 경우는 처리가 어려우므로 일단 제외
-      // if (isNotEmpty(point) card.point = point;
+
       card.save();
       return res.send(card.shorten())
     })
@@ -89,9 +88,9 @@ cards.addSubmission = function (req, res) {
       if (isEmpty(submissionUrl))
         return res.send(400, {message: 'Url is empty'});
 
-      Submission.new(card.id, submissionUrl).save(function (err) {
+      Submission.new(card.id, submissionUrl, userId).save(function (err, saved) {
         if (err) return res.send(500, {message: e});
-        return res.send({message: "Success"});
+        return res.send({message: saved});
       });
     })
     .catch(function (err) {

@@ -4,6 +4,7 @@ let randomString = require("randomstring");
 let schema = new mongoose.Schema({
   id: String,
   cardId: String,
+  userId: String,
   url: String,
   citations: [{
     cardId: String,
@@ -21,18 +22,20 @@ let schema = new mongoose.Schema({
 
 const DELIMITER = "_";
 
-schema.statics.new = function (cardId, submissionUrl) {
+schema.statics.new = function (cardId, submissionUrl, userId) {
   return new Submission({
     id: "submission" + DELIMITER + randomString.generate(8),
     cardId: cardId,
+    userId: userId,
     url: submissionUrl,
     citations: [],
     cited: [],
     createdAt: new Date(),
+    createdBy: userId
   });
 };
 
-schema.statics.cite = function (cardId, submissionId) {
+schema.methods.cite = function (cardId, submissionId) {
   this.citations.push({
     cardId: cardId,
     sourceId: submissionId,
@@ -41,7 +44,7 @@ schema.statics.cite = function (cardId, submissionId) {
   return this;
 };
 
-schema.statics.cited = function (cardId, submissionId) {
+schema.methods.logCited = function (cardId, submissionId) {
   this.cited.push({
     cardId: cardId,
     sourceId: submissionId,

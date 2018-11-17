@@ -15,7 +15,7 @@ router.post('/:id/cite', function (req, res) {
       Submission.findOne({id: citationId})
         .then(function (cited) {
           citer.cite(citer.cardId, citationId).save();
-          cited.cited(cited.cardId, cited.id).save();
+          cited.logCited(cited.cardId, cited.id).save();
           res.send({message: "Success"});
         })
         .catch(function (e) {
