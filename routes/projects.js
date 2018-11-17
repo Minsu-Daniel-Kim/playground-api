@@ -151,7 +151,7 @@ function convertToDto(values, res) {
     return res.send({message: `Can't find cards by: ${projectId}`});
   return res.send(cards.map(card => {
     let dto = card.shorten();
-    dto.submissions = subs.filter(e => e.cardId === card.id).map(e => {
+    dto.metadata.submissions = subs.filter(e => e.cardId === card.id).map(e => {
       return {
         id: e.id,
         url: e.url,
