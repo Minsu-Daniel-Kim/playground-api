@@ -304,7 +304,7 @@ router.post('/:id/withdraw', function (req, res) {
       // return staking
       StakingPool.findOne({userId: userId})
         .then(pool => {
-          pool.log(projectId, /*TODO*/project.stakingAmount * -1, "WITHDRAW", "").save();
+          pool.log(projectId, /*TODO*/project.requirement.stakingAmount * -1, "WITHDRAW", "").save();
           return res.send({message: `Success to withdraw project`})
         })
         .catch(function (e) {
