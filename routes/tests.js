@@ -1,3 +1,4 @@
+let Card = require("../models/cards");
 let StakingPool = require("../models/stakings");
 let TokenPool = require("../models/tokens");
 let PointPool = require("../models/points");
@@ -79,6 +80,24 @@ router.get('/submissions', function (req, res) {
   Submission.find({})
     .then(function (submissions) {
       return res.send(submissions);
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: "Something went wrong"});
+    });
+});
+
+router.get('/cards/clear-rate', function (req, res) {
+  Card.find({})
+    .then(function (cards) {
+      if (!cards)
+        return res.send(404, {message: `Card not exist`});
+
+      cards.map(card => {
+        card.rates = [];
+        card.save();
+      });
+      return res.send({message: 'Success'});
     })
     .catch(function (e) {
       console.error(e);
