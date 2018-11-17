@@ -34,10 +34,10 @@ schema.statics.new = function (projectId, userId, giver) {
 };
 
 schema.methods.add = function (id, point, type) {
-  this.totalPoint += point;
+  this.totalPoint = (this.totalPoint || 0) + point;
   this.histories.push({
     sourceId: id,
-    type: type, // CARD, COMMENT
+    type: type, // CARD, COMMENT, CITE, CITED
     point: point,
     createdAt: new Date()
   });
