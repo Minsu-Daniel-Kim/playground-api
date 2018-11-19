@@ -9,11 +9,13 @@ require('dotenv').load();
 
 const indexRouter = require('./routes/index');
 const cardsRouter = require('./routes/cards');
+const submissionsRouter = require('./routes/submissions');
 const usersRouter = require('./routes/users');
 const projectsRouter = require('./routes/projects');
-const submissionsRouter = require('./routes/submissions');
 const adminRouter = require('./routes/admin');
+const tpmRouter = require('./routes/tpms');
 const testRouter = require('./routes/tests');
+const oauthRouter = require('./routes/oauth');
 
 const app = express();
 
@@ -44,8 +46,11 @@ app.use('/users', usersRouter);
 app.use('/projects', projectsRouter);
 app.use('/submissions', submissionsRouter);
 app.use('/admin', adminRouter);
+app.use('/tpm', tpmRouter);
 // test apis
 app.use('/test', testRouter);
+app.use('/oauth', oauthRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
