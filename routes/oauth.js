@@ -40,7 +40,7 @@ router.post('/', function (req, res) {
           });
       }
       else {
-        return res.send({userId: user.id});
+        return res.send({userId: user.id, signUpComplete: user.signUpComplete});
       }
     })
     .catch(function (e) {
@@ -71,11 +71,18 @@ router.post('/user-info', function (req, res) {
 });
 
 // TODO user의 추가 정보를 저장한다
-// router.post('/signup', function (req, res) {
-//   User.findOne()
-//     .then()
-//     .catch();
-// });
+router.post('/sign-up', function (req, res) {
+  User.findOne({id: req.body.userId})
+    .then(function(user) {
+      user.signUpComplete = true;
+      user.save();
+      res.send({message: 'success'});
+    })
+    .catch(function(e) {
+      console.error(e);
+      res.send(500, {message: 'Something went wrong'});
+    });
+});
 
 
 module.exports = router;

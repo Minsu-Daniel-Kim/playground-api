@@ -3,14 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Signup</title>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
 </head>
 <body>
-<div>추가 정보 입력 화면</div>
+<div>추가 정보 입력 화</div>
 <ul>
     <li>metamask 가입 방법 알려준다</li>
     <li>email 허용을 안했을 경우 추가 email을 받아야 함</li>
     <li>TPM으로 가입하려는 경우인지 MEMBER로 가입하려는 경우인지 받는다</li>
 </ul>
 
+<button id="signup-button">가입완료</button>
+<script>
+  let signinButton = document.getElementById('signup-button');
+  signinButton.onclick = signUp;
+
+  function signUp(event) {
+    console.log('button click');
+    <!--58560086517a5da3bf0e4a75bdf7ffd8-->
+    let url = '/oauth/sign-up';
+    $.post(url, {userId: window.localStorage.getItem("userId")}, function (data) {
+      console.log(data);
+      // if success
+      window.location.replace("/");
+    });
+  }
+</script>
 </body>
 </html>
