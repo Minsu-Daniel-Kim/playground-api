@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport"
+          content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width"/>
+    <title>API Demo - Kakao JavaScript SDK</title>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//developers.kakao.com/sdk/js/kakao.min.js"></script>
+</head>
+<body>
+<a id="kakao-login-btn"></a>
+<script type='text/javascript'>
+  // 사용할 앱의 JavaScript 키를 설정해 주세요.
+  Kakao.init('58560086517a5da3bf0e4a75bdf7ffd8');
+  // 카카오 로그인 버튼을 생성합니다.
+  Kakao.Auth.createLoginButton({
+    container: '#kakao-login-btn',
+    success: function (authObj) {
+      // 로그인 성공시, API를 호출합니다.
+      Kakao.API.request({
+        url: '/v2/user/me',
+        success: function (res) {
+          console.log(JSON.stringify(res));
+        },
+        fail: function (error) {
+          alert(JSON.stringify(error));
+        }
+      }).then(function (res) {
+        // 이전 API 호출이 성공한 경우 다음 API를 호출합니다.
+        $.post("/oauth", {data: JSON.stringify(res)}, function (data) {
+          console.log(data);
+
+          // if signup not finished redirect to signup page
+          if (!data.signUpComplete)
+            window.location.replace("/signup.html");
+          else
+          // else redirect to home
+            window.location.replace("/");
+        })
+
+      });
+    },
+    fail: function (err) {
+      alert(JSON.stringify(err));
+    }
+  });
+</script>
+
+</body>
+</html>
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--<meta charset="UTF-8">-->
+<!--<script src="//code.jquery.com/jquery-3.3.1.min.js"></script>-->
+<!--<script src="//developers.kakao.com/sdk/js/kakao.min.js"></script>-->
+<!--<title>kakao login</title>-->
+
+<!--</head>-->
+<!--<body>-->
+<!--<button id="authorize-button">kakao login</button>-->
+<!--<script>-->
+<!--let signinButton = document.getElementById('authorize-button');-->
+<!--signinButton.onclick = handleAuthClick;-->
+
+<!--function handleAuthClick(event) {-->
+<!--console.log('handleAuthClick');-->
+<!--&lt;!&ndash;58560086517a5da3bf0e4a75bdf7ffd8&ndash;&gt;-->
+<!--let url = '//kauth.kakao.com/oauth/authorize?client_id=58560086517a5da3bf0e4a75bdf7ffd8&redirect_uri=http://localhost:3000/projects/project_XwPp9xaz/oauth&response_type=code';-->
+<!--// let url = '//kauth.kakao.com/oauth/authorize?client_id=58560086517a5da3bf0e4a75bdf7ffd8&redirect_uri=http://snowball-api-backend.herokuapp.com/projects/project_XwPp9xaz/oauth&response_type=code';-->
+<!--$.ajax({-->
+<!--url: url,-->
+<!--// data: data,-->
+<!--// success: success,-->
+<!--dataType: 'HTTP/1.1'-->
+<!--});-->
+<!--}-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
