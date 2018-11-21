@@ -49,10 +49,28 @@ router.post('/', function (req, res) {
     });
 });
 
+/**
+ * authentication의 id로 user 정보를 리턴한다
+ */
 router.post('/user-info', function (req, res) {
+  console.log(JSON.parse(req.body.data));
+  let data = JSON.parse(req.body.data);
+  let authId = data.id;
+
+  User.findOne({"authentication.id": authId})
+    .then(function (user) {
+      if (user === null || user === undefined) {
+        return res.send(404, {message: `Can't find user with authentication key: ${authId}`});
+      }
+      return res.send(user.to_json());
+    })
+    .catch(function (e) {
+      console.error(e);
+      return res.send(500, {message: `Something went wrong: ${e.toString()}`});
+    });
 });
 
-// TODO user의 정보를 저장한다
+// TODO user의 추가 정보를 저장한다
 // router.post('/signup', function (req, res) {
 //   User.findOne()
 //     .then()

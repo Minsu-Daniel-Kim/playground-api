@@ -1,16 +1,21 @@
+let randomString = require('randomstring');
 let mongoose = require('mongoose');
+let AuthType = require('../modules/authentications');
 
 let schema = new mongoose.Schema({
   id: String,
   nickname: String,
   email: String,
   accountAddress: String,
-  createdDate: Date,
   profileImageUrl: String, // gravata address
   reputation: Number,
   qualified: Boolean,
   qualifier: String, // adminId
-  role: String, // auth
+  role: String,      // auth
+  authentication: {
+    // id: String,
+    // type: String,
+  },
   projects: [{
     projectId: String,
     joinedAt: Date,
@@ -20,7 +25,29 @@ let schema = new mongoose.Schema({
     gainedPoint: Number,
     state: String //"APPLIED", "WITHDRAW", "APPROVED
   }],
+  signUpComplete: Boolean,
+  createdDate: Date,
 });
+
+const DELIMITER = "_";
+
+schema.statics.new = function (authenticationId, nickname, profileImage, email) {
+  return new User({
+      id: "user" + DELIMITER + randomString.generate(8),
+      email: email,
+      nickname: nickname,
+      profileImageUrl: profileImage,
+      reputation: 0,
+      qualified: false,
+      role: AuthType.MEMBER,
+      authentication: {
+        id: authenticationId,
+        type: "kakao"
+      },
+      signUpComplete: false
+    }
+  );
+};
 
 schema.methods.to_json = function () {
   return {
@@ -31,7 +58,7 @@ schema.methods.to_json = function () {
     createdAt: this.createdDate,
     coinBalance: 0,
     reputation: this.reputation,
-    // role: this.role,
+    role: this.role,
     profileImageUrl: this.profileImageUrl,
     projects: this.projects
   }
