@@ -26,12 +26,13 @@ let schema = new mongoose.Schema({
     state: String //"APPLIED", "WITHDRAW", "APPROVED
   }],
   signUpComplete: Boolean,
-  createdDate: Date,
+  createdAt: Date,
+  createdDate: Date, // TODO delete this
 });
 
 const DELIMITER = "_";
 
-schema.statics.new = function (authenticationId, nickname, profileImage, email) {
+schema.statics.new = function (authId, authType, nickname, profileImage, email) {
   return new User({
       id: "user" + DELIMITER + randomString.generate(8),
       email: email,
@@ -41,10 +42,11 @@ schema.statics.new = function (authenticationId, nickname, profileImage, email) 
       qualified: false,
       role: AuthType.MEMBER,
       authentication: {
-        id: authenticationId,
-        type: "kakao"
+        id: authId,
+        type: authType
       },
-      signUpComplete: false
+      signUpComplete: false,
+      createdAt: new Date()
     }
   );
 };

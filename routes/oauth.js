@@ -18,7 +18,7 @@ let router = express.Router();
 //     has_birthday: false,
 //     has_gender: false } }
 
-router.post('/', function (req, res) {
+router.post('/kakao', function (req, res) {
   console.log(JSON.parse(req.body.data));
   let data = JSON.parse(req.body.data);
   let authId = data.id;
@@ -30,7 +30,7 @@ router.post('/', function (req, res) {
   User.findOne({"authentication.id": authId})
     .then(function (user) {
       if (user === null || user === undefined) {
-        User.new(authId, nickname, profileImage, email).save()
+        User.new(authId, "kakao", nickname, profileImage, email).save()
           .then(function (saved) {
             return res.send(saved);
           })
@@ -73,12 +73,12 @@ router.post('/user-info', function (req, res) {
 // TODO user의 추가 정보를 저장한다
 router.post('/sign-up', function (req, res) {
   User.findOne({id: req.body.userId})
-    .then(function(user) {
+    .then(function (user) {
       user.signUpComplete = true;
       user.save();
       res.send({message: 'success'});
     })
-    .catch(function(e) {
+    .catch(function (e) {
       console.error(e);
       res.send(500, {message: 'Something went wrong'});
     });
