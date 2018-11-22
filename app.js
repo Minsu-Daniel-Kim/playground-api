@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({
   'allowedHeaders': ['sessionId', 'Content-Type'],
   'exposedHeaders': ['Content-Range', 'X-Content-Range'],
-  'origin': ['http://localhost', 'http://localhost:3000', 'http://playground.ds', 'http://playground.ds:3000'],
+  'origin': ['http://localhost', 'http://localhost:3000', 'https://snowball-front.herokuapp.com', 'http://snowball-front.herokuapp.com'],
   'methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   'credentials': true,
   'preflightContinue': false
