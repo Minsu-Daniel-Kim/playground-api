@@ -16,6 +16,7 @@ const adminRouter = require('./routes/admin');
 const tpmRouter = require('./routes/tpms');
 const testRouter = require('./routes/tests');
 const oauthRouter = require('./routes/oauth');
+const transactionRouter = require('./routes/transactions');
 
 const app = express();
 
@@ -47,9 +48,11 @@ app.use('/projects', projectsRouter);
 app.use('/submissions', submissionsRouter);
 app.use('/admin', adminRouter);
 app.use('/tpm', tpmRouter);
+app.use('/oauth', oauthRouter);
+app.use('/transactions', transactionRouter);
 // test apis
 app.use('/test', testRouter);
-app.use('/oauth', oauthRouter);
+
 
 
 // catch 404 and forward to error handler
