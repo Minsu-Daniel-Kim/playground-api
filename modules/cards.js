@@ -9,7 +9,7 @@ let Authentication = require('../modules/authentications');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
 const mailer = require('../jobs/mails/mailer2');
-require('../jobs/slashJob');
+require('../jobs/taskTimeout');
 require('../jobs/notiExpireJob');
 
 
@@ -137,14 +137,18 @@ cards.ready = function (req, res) {
 };
 
 function scheduleAfterAssignment(card, userId) {
-  let job = agenda.create('slash', {cardId: card.id});
-  // job.repeatEvery('1 hour', {skipImmediate: true}); // TODO
-  job.repeatEvery('15 seconds', {skipImmediate: true}); // TODO for dev
-  job.save();
+  // let job = agenda.create('slash', {cardId: card.id});
+  // job.repeatEvery('15 seconds', {skipImmediate: true}); // TODO for dev
+  // job.save();
 
-  // TODO card point가 1이면 noti expiration을 다르게 줘야함
-  let expiredAt = moment(card.dueDate).add(-1, 'hours').calendar();
-  agenda.schedule(expiredAt, 'notiExpiration', {cardId: card.id, userId: userId});
+  // TODO 24시간 뒤에 expire schedule
+  let now = new Date();
+  let expiredAt = moment(now).add(24, 'hours').calendar();
+  agenda.schedule(expiredAt, 'taskTimeout', {cardId: card.id, userId: userId});
+
+  // TODO 23시간 뒤에 noti 줘야함
+  let notiAt = moment(expiredAt).add(-1, 'hours').calendar();
+  agenda.schedule(notiAt, 'notiExpiration', {cardId: card.id, userId: userId});
 
   mailer.cardAssigned(card, userId);
 }
