@@ -1,7 +1,8 @@
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 let randomString = require("randomstring");
+let Authentocation = require('../modules/authentications');
 
-var schema = new mongoose.Schema({
+let schema = new mongoose.Schema({
   id: String,           // projectXXXXXXXX
   name: String,
   description: String,  // description of project
@@ -18,6 +19,12 @@ var schema = new mongoose.Schema({
   },
   // voting period sprintCount 만큼 지정된다
   sprintCount: Number,
+  sprints: [{
+    id: String,
+    startAt: Date,   // 월
+    endAt: Date,     // 일
+    voteEndAt: Date, // 토
+  }],
   votingPeriods: [{
     id: String,
     cardCount: Number,
@@ -31,7 +38,7 @@ var schema = new mongoose.Schema({
   openFunding: Boolean,
   members: [{
     userId: String,
-    role: String,       // TODO enum: TPM, TA, MEMBER
+    role: String,       // see Authentocation
     staking: Number,
     joinedDate: Date,
   }],
@@ -73,7 +80,7 @@ schema.methods.to_json = function () {
     startAt: this.startAt,
     endAt: this.endAt,
     owner: this.createdBy,
-    tpm: findMemberByRole(this.members, "TPM"),
+    tpm: findMemberByRole(this.members, Authentocation.TPM),
     state: this.state,
     members: this.members.map(member => {
       return {
@@ -99,8 +106,12 @@ function findMemberByRole(members, role) {
   return member.userId;
 }
 
+schema.methods.tpm = function () {
+  return findMemberByRole(this.members, Authentocation.TPM)
+};
+
 schema.methods.students = function () {
-  return this.members.filter(e => e.role === "MEMBER");
+  return this.members.filter(e => e.role === Authentocation.MEMBER);
 };
 
 schema.methods.apply = function (userId, staking) {
@@ -131,7 +142,7 @@ schema.methods.approve = function (userId) {
   this.candidates = this.candidates.filter(e => e.userId !== userId);
   this.members.push({
     userId: userId,
-    role: "MEMBER",
+    role: Authentocation.MEMBER,
     staking: candidate.staking,
     joinedDate: candidate.joinedDate
   });

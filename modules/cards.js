@@ -5,6 +5,7 @@ let Project = require('../models/projects');
 let cardState = require('../models/card_state');
 let TokenPool = require('../models/tokens');
 let PointPool = require('../models/points');
+let Authentication = require('../modules/authentications');
 let fsm = require('../tasks/cardstate');
 let agenda = require('../jobs/agenda');
 const mailer = require('../jobs/mails/mailer2');
@@ -26,7 +27,6 @@ cards.listAll = function (req, res) {
       return res.send({message: err});
     })
 };
-
 
 let getSubmissions = function (card) {
   return new Promise((resolve, reject) => {
@@ -139,7 +139,7 @@ cards.ready = function (req, res) {
 function scheduleAfterAssignment(card, userId) {
   let job = agenda.create('slash', {cardId: card.id});
   // job.repeatEvery('1 hour', {skipImmediate: true}); // TODO
-  job.repeatEvery('15 seconds', {skipImmediate: true}); // TODO
+  job.repeatEvery('15 seconds', {skipImmediate: true}); // TODO for dev
   job.save();
 
   // TODO card point가 1이면 noti expiration을 다르게 줘야함
@@ -470,7 +470,7 @@ function checkRole(card, userId, roles) {
           reject(`Project not exist: ${card.projectId}`);
         // TODO for temporary
         // if (project.isAdmin(userId))
-          resolve(card);
+        resolve(card);
         // if (project.hasAuth(userId, roles))
         //   resolve(card);
         // else reject(`${userId} has no auth of ${roles} in ${project.id}`);
@@ -482,15 +482,15 @@ function checkRole(card, userId, roles) {
 }
 
 function isMentor(card, userId) {
-  return checkRole(card, userId, ["TPM", "TA"]);
+  return checkRole(card, userId, [Authentication.TPM, Authentication.TA]);
 }
 
 function isMentee(card, userId) {
-  return checkRole(card, userId, ["MEMBER"]);
+  return checkRole(card, userId, [Authentication.MEMBER]);
 }
 
 function isMember(card, userId) {
-  return checkRole(card, userId, ["TPM", "TA", "MEMBER"]);
+  return checkRole(card, userId, [Authentication.TPM, Authentication.TA, Authentication.MEMBER]);
 }
 
 function isAssignee(card, userId) {
